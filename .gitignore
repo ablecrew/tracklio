@@ -39,3 +39,6 @@ coverage/
 
 # Local storage
 uploads/
+
+# Admin script (contains sensitive credentials)
+createAdmin.js
