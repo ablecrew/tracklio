@@ -20,7 +20,6 @@ const HABIT_COLORS = [
   { label: "Rose", val: "#F43F5E" },
   { label: "Blue", val: "#3B82F6" },
 ];
-const DAYS_SHORT = ["M", "T", "W", "T", "F", "S", "S"];
 
 /* Build last-N-days array */
 function lastNDays(n) {
@@ -69,7 +68,7 @@ const EMPTY_FORM = { name: "", icon: "🎯", color: "#7C3AED", frequency: "daily
 
 export default function Habits() {
   const [habits, setHabits] = useState([]);
-  const [logs, setLogs] = useState({});   // { habitId: [{date, count}] }
+  const [logs, setLogs] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -169,7 +168,6 @@ export default function Habits() {
   };
 
   /* ── Aggregate analytics ── */
-  const totalLogs = Object.values(logs).flat().length;
   const todayDone = habits.filter(h => (logs[h._id] || []).some(l => l.date?.split("T")[0] === today)).length;
   const topStreak = habits.reduce((best, h) => { const s = calcStreak(h._id); return s > best ? s : best; }, 0);
   const overallRate = habits.length ? Math.round(habits.reduce((s, h) => s + completionRate(h._id), 0) / habits.length) : 0;
@@ -381,7 +379,6 @@ export default function Habits() {
                         <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{h.frequency || "daily"} · {h.target || 1}× {h.unit || "times"}</p>
                       </div>
                     </div>
-                    {/* Actions */}
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => setViewH(h)}
@@ -407,7 +404,6 @@ export default function Habits() {
                     </div>
                   </div>
 
-                  {/* Stats row */}
                   <div className="flex gap-4 mb-3">
                     <div className="text-center">
                       <div className="text-lg font-black flex items-center gap-1" style={{ color: h.color }}>
@@ -424,7 +420,6 @@ export default function Habits() {
                       <p className="text-lg font-black text-gray-100">{hLogs.length}</p>
                       <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Total</p>
                     </div>
-                    {/* Consistency bar */}
                     <div className="flex-1 flex flex-col justify-center gap-1">
                       <p className="text-[10px] text-gray-500 font-semibold">Consistency</p>
                       <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -433,11 +428,9 @@ export default function Habits() {
                     </div>
                   </div>
 
-                  {/* 28-day heatmap */}
                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">28-Day Activity</p>
                   <StreakGrid logs={hLogs} color={h.color} />
 
-                  {/* Check-in button */}
                   <button
                     onClick={() => logToday(h)}
                     className="w-full mt-3.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all"
@@ -466,130 +459,201 @@ export default function Habits() {
         )}
       </div>
 
-      {/* Create / Edit Modal */}
+      {/* Create / Edit Modal - FIXED: Now scrollable and fits screen */}
       {showForm && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowForm(false)}>
-          <div className="bg-gray-900 border border-white/5 rounded-2xl p-7 w-[92%] max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="font-extrabold text-lg mb-5 flex items-center gap-2">
-              {editH ? <Edit2 className="w-5 h-5 text-violet-400" /> : <Plus className="w-5 h-5 text-emerald-400" />}
-              {editH ? "Edit Habit" : "New Habit"}
-            </h3>
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Habit Name *</label>
-                <input className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-medium text-gray-100 placeholder-gray-600 focus:border-violet-400/50 outline-none transition-all" placeholder="e.g. Morning Run" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-2">Icon</label>
-                <div className="flex flex-wrap gap-2">
-                  {HABIT_ICONS.map(ic => (
-                    <button
-                      key={ic}
-                      onClick={() => setForm(p => ({ ...p, icon: ic }))}
-                      className="w-9 h-9 rounded-lg text-lg cursor-pointer transition-all"
-                      style={{
-                        border: `2px solid ${form.icon === ic ? "#8B5CF6" : "rgba(255,255,255,0.07)"}`,
-                        background: form.icon === ic ? "rgba(124,58,237,0.15)" : "#1A1A28",
-                      }}
+          <div className="bg-gray-900 border border-white/5 rounded-2xl shadow-2xl w-[92%] max-w-md max-h-[90vh] flex flex-col">
+            {/* Header - Fixed */}
+            <div className="flex items-center justify-between px-7 pt-7 pb-4 border-b border-white/5">
+              <h3 className="font-extrabold text-lg flex items-center gap-2">
+                {editH ? <Edit2 className="w-5 h-5 text-violet-400" /> : <Plus className="w-5 h-5 text-emerald-400" />}
+                {editH ? "Edit Habit" : "New Habit"}
+              </h3>
+              <button 
+                onClick={() => { setShowForm(false); setEditH(null); setForm(EMPTY_FORM); }}
+                className="text-gray-500 hover:text-gray-300 transition-all p-1 rounded-lg hover:bg-gray-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto px-7 py-5 flex-1">
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Habit Name *</label>
+                  <input 
+                    className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-medium text-gray-100 placeholder-gray-600 focus:border-violet-400/50 outline-none transition-all" 
+                    placeholder="e.g. Morning Run" 
+                    value={form.name} 
+                    onChange={e => setForm(p => ({ ...p, name: e.target.value }))} 
+                    autoFocus
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-2">Icon</label>
+                  <div className="flex flex-wrap gap-2">
+                    {HABIT_ICONS.map(ic => (
+                      <button
+                        key={ic}
+                        onClick={() => setForm(p => ({ ...p, icon: ic }))}
+                        className="w-9 h-9 rounded-lg text-lg cursor-pointer transition-all"
+                        style={{
+                          border: `2px solid ${form.icon === ic ? "#8B5CF6" : "rgba(255,255,255,0.07)"}`,
+                          background: form.icon === ic ? "rgba(124,58,237,0.15)" : "#1A1A28",
+                        }}
+                      >
+                        {ic}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-2">Colour</label>
+                  <div className="flex gap-2">
+                    {HABIT_COLORS.map(c => (
+                      <button
+                        key={c.val}
+                        onClick={() => setForm(p => ({ ...p, color: c.val }))}
+                        className="w-7 h-7 rounded-full cursor-pointer transition-all"
+                        style={{
+                          background: c.val,
+                          border: `3px solid ${form.color === c.val ? "#fff" : "transparent"}`,
+                          boxShadow: form.color === c.val ? `0 0 10px ${c.val}` : "none",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Frequency</label>
+                    <select 
+                      className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-semibold text-gray-100 focus:border-violet-400/50 outline-none transition-all appearance-none" 
+                      value={form.frequency} 
+                      onChange={e => setForm(p => ({ ...p, frequency: e.target.value }))}
                     >
-                      {ic}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-2">Colour</label>
-                <div className="flex gap-2">
-                  {HABIT_COLORS.map(c => (
-                    <button
-                      key={c.val}
-                      onClick={() => setForm(p => ({ ...p, color: c.val }))}
-                      className="w-7 h-7 rounded-full cursor-pointer transition-all"
-                      style={{
-                        background: c.val,
-                        border: `3px solid ${form.color === c.val ? "#fff" : "transparent"}`,
-                        boxShadow: form.color === c.val ? `0 0 10px ${c.val}` : "none",
-                      }}
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="weekdays">Weekdays</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Target</label>
+                    <input 
+                      className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-medium text-gray-100 text-center focus:border-violet-400/50 outline-none transition-all" 
+                      type="number" 
+                      min="1" 
+                      value={form.target} 
+                      onChange={e => setForm(p => ({ ...p, target: e.target.value }))} 
                     />
-                  ))}
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Unit</label>
+                    <input 
+                      className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-medium text-gray-100 placeholder-gray-600 focus:border-violet-400/50 outline-none transition-all" 
+                      placeholder="times" 
+                      value={form.unit} 
+                      onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} 
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                
                 <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Frequency</label>
-                  <select className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-semibold text-gray-100 focus:border-violet-400/50 outline-none transition-all appearance-none" value={form.frequency} onChange={e => setForm(p => ({ ...p, frequency: e.target.value }))}>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="weekdays">Weekdays</option>
-                  </select>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Note (optional)</label>
+                  <input 
+                    className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-medium text-gray-100 placeholder-gray-600 focus:border-violet-400/50 outline-none transition-all" 
+                    placeholder="Why this habit matters…" 
+                    value={form.note} 
+                    onChange={e => setForm(p => ({ ...p, note: e.target.value }))} 
+                  />
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Target</label>
-                  <input className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-medium text-gray-100 text-center focus:border-violet-400/50 outline-none transition-all" type="number" min="1" value={form.target} onChange={e => setForm(p => ({ ...p, target: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Unit</label>
-                  <input className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-medium text-gray-100 placeholder-gray-600 focus:border-violet-400/50 outline-none transition-all" placeholder="times" value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} />
-                </div>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1.5">Note (optional)</label>
-                <input className="w-full px-3.5 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-sm font-medium text-gray-100 placeholder-gray-600 focus:border-violet-400/50 outline-none transition-all" placeholder="Why this habit matters…" value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))} />
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
-              <button className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all" onClick={() => { setShowForm(false); setEditH(null); setForm(EMPTY_FORM); }}>Cancel</button>
-              <button className="flex-[2] px-4 py-2.5 bg-gradient-to-r from-violet-600 to-emerald-500 border-0 rounded-xl text-white font-bold text-xs hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2" onClick={saveHabit} disabled={saving || !form.name.trim()}>
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {saving ? "Saving…" : editH ? "Update Habit" : "Create Habit"}
-              </button>
+
+            {/* Footer - Fixed with buttons always visible */}
+            <div className="px-7 pb-7 pt-4 border-t border-white/5">
+              <div className="flex gap-3">
+                <button 
+                  className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all" 
+                  onClick={() => { setShowForm(false); setEditH(null); setForm(EMPTY_FORM); }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="flex-[2] px-4 py-2.5 bg-gradient-to-r from-violet-600 to-emerald-500 border-0 rounded-xl text-white font-bold text-xs hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
+                  onClick={saveHabit} 
+                  disabled={saving || !form.name.trim()}
+                >
+                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {saving ? "Saving…" : editH ? "Update Habit" : "Create Habit"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* View detail */}
+      {/* View detail modal - also fixed for consistency */}
       {viewH && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in" onClick={e => e.target === e.currentTarget && setViewH(null)}>
-          <div className="bg-gray-900 border border-white/5 rounded-2xl p-7 w-[92%] max-w-md shadow-2xl">
-            <div className="flex justify-between mb-4">
+          <div className="bg-gray-900 border border-white/5 rounded-2xl shadow-2xl w-[92%] max-w-md max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-7 pt-7 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2.5">
                 <span className="text-3xl">{viewH.icon}</span>
                 <h3 className="font-extrabold text-lg">{viewH.name}</h3>
               </div>
-              <button onClick={() => setViewH(null)} className="text-gray-500 hover:text-gray-300 transition-all">
+              <button onClick={() => setViewH(null)} className="text-gray-500 hover:text-gray-300 transition-all p-1 rounded-lg hover:bg-gray-800">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            {[
-              ["Frequency", viewH.frequency || "daily"],
-              ["Target", `${viewH.target || 1} ${viewH.unit || "times"}`],
-              ["Current Streak", `🔥 ${calcStreak(viewH._id)} days`],
-              ["30-Day Rate", `${completionRate(viewH._id)}%`],
-              ["Total Logs", (logs[viewH._id] || []).length],
-              ["Note", viewH.note || "—"],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between py-2 border-b border-white/5">
-                <span className="text-xs text-gray-500 font-semibold">{k}</span>
-                <span className="text-xs font-bold text-gray-100">{v}</span>
+            
+            <div className="overflow-y-auto px-7 py-5 flex-1">
+              {[
+                ["Frequency", viewH.frequency || "daily"],
+                ["Target", `${viewH.target || 1} ${viewH.unit || "times"}`],
+                ["Current Streak", `${calcStreak(viewH._id)} days`],
+                ["30-Day Rate", `${completionRate(viewH._id)}%`],
+                ["Total Logs", (logs[viewH._id] || []).length],
+                ["Note", viewH.note || "—"],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between py-2 border-b border-white/5">
+                  <span className="text-xs text-gray-500 font-semibold">{k}</span>
+                  <span className="text-xs font-bold text-gray-100">{v}</span>
+                </div>
+              ))}
+              
+              <div className="mt-3.5">
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">28-Day Heatmap</p>
+                <StreakGrid logs={logs[viewH._id] || []} color={viewH.color} />
               </div>
-            ))}
-            <div className="mt-3.5">
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1.5">28-Day Heatmap</p>
-              <StreakGrid logs={logs[viewH._id] || []} color={viewH.color} />
             </div>
-            <div className="flex gap-3 mt-4">
-              <button className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all" onClick={() => setViewH(null)}>Close</button>
-              <button className="flex-1 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-emerald-500 border-0 rounded-xl text-white font-bold text-xs hover:opacity-90 transition-all" onClick={() => { setViewH(null); setEditH(viewH); setForm({ name: viewH.name, icon: viewH.icon, color: viewH.color, frequency: viewH.frequency || "daily", target: viewH.target || 1, unit: viewH.unit || "times", note: viewH.note || "" }); setShowForm(true); }}>
-                <Edit2 className="w-3.5 h-3.5 inline mr-1" />
-                Edit
-              </button>
+            
+            <div className="px-7 pb-7 pt-4 border-t border-white/5">
+              <div className="flex gap-3">
+                <button 
+                  className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all" 
+                  onClick={() => setViewH(null)}
+                >
+                  Close
+                </button>
+                <button 
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-emerald-500 border-0 rounded-xl text-white font-bold text-xs hover:opacity-90 transition-all" 
+                  onClick={() => { setViewH(null); setEditH(viewH); setForm({ name: viewH.name, icon: viewH.icon, color: viewH.color, frequency: viewH.frequency || "daily", target: viewH.target || 1, unit: viewH.unit || "times", note: viewH.note || "" }); setShowForm(true); }}
+                >
+                  <Edit2 className="w-3.5 h-3.5 inline mr-1" />
+                  Edit
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete confirm */}
+      {/* Delete confirm modal - also fixed */}
       {delH && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in" onClick={e => e.target === e.currentTarget && setDelH(null)}>
           <div className="bg-gray-900 border border-white/5 rounded-2xl p-7 w-[92%] max-w-sm shadow-2xl">
@@ -599,8 +663,18 @@ export default function Habits() {
               Delete <strong className="text-white">{delH.name}</strong> and all its logs? This cannot be undone.
             </p>
             <div className="flex gap-3">
-              <button className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all" onClick={() => setDelH(null)}>Cancel</button>
-              <button className="flex-1 px-4 py-2.5 bg-rose-600 border-0 rounded-xl text-white font-bold text-xs hover:bg-rose-500 transition-all" onClick={deleteHabit}>Delete</button>
+              <button 
+                className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all" 
+                onClick={() => setDelH(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="flex-1 px-4 py-2.5 bg-rose-600 border-0 rounded-xl text-white font-bold text-xs hover:bg-rose-500 transition-all" 
+                onClick={deleteHabit}
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
