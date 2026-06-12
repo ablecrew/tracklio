@@ -2,15 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Activity,
-  Twitter,
-  Linkedin,
-  Github,
-  Youtube,
-  Instagram,
   ArrowRight,
   Sparkles,
   Check,
 } from "lucide-react";
+import { FaGithub, FaLinkedin, FaInstagram, FaYoutube, FaTwitter } from 'react-icons/fa';
 
 /* ─── Data ─── */
 const STATS = [
@@ -22,11 +18,11 @@ const STATS = [
 ];
 
 const SOCIAL_LINKS = [
-  { Icon: Twitter, href: "#", label: "Twitter / X" },
-  { Icon: Linkedin, href: "#", label: "LinkedIn" },
-  { Icon: Github, href: "#", label: "GitHub" },
-  { Icon: Youtube, href: "#", label: "YouTube" },
-  { Icon: Instagram, href: "#", label: "Instagram" },
+  { Icon: FaTwitter, href: "#", label: "Twitter / X" },
+  { Icon: FaLinkedin, href: "#", label: "LinkedIn" },
+  { Icon: FaGithub, href: "#", label: "GitHub" },
+  { Icon: FaYoutube, href: "#", label: "YouTube" },
+  { Icon: FaInstagram, href: "#", label: "Instagram" },
 ];
 
 const PRODUCT_LINKS = [
