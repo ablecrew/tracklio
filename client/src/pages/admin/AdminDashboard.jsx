@@ -1,391 +1,571 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import API from "../../api/api";
 import {
-  AreaChart, Area, BarChart, Bar, LineChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Cell, PieChart, Pie,
 } from "recharts";
+import {
+  Shield, Users, Activity, Crown, Radio, UserPlus, AlertTriangle, DollarSign,
+  TrendingDown, RefreshCw, Megaphone, Search, Bell, Sparkles, Settings as Cog,
+  Server, Database, Lock, Mail, HardDrive, BarChart3, X, Check, Trash2,
+  ArrowUp, Ban, Eye, ChevronRight, Loader2, Wifi, Brain, Globe,
+} from "lucide-react";
 
-/* ─── Styles ─── */
-const S = `
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{--v:#7C3AED;--vl:#8B5CF6;--c:#06B6D4;--cl:#22D3EE;--e:#10B981;--r:#F43F5E;--a:#F59E0B;
-    --d1:#080810;--d2:#0E0E18;--d3:#14141F;--d4:#1A1A28;--d5:#222235;
-    --gb:rgba(255,255,255,0.07);--t1:#F0F0FF;--t2:#9090B8;--t3:#505075;}
-  html,body{font-family:'Montserrat',sans-serif;background:var(--d1);color:var(--t1)}
-  ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--d5);border-radius:99px}
-  .orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0}
-  .o1{width:700px;height:700px;background:var(--v);top:-250px;left:-200px;opacity:.09}
-  .o2{width:600px;height:600px;background:var(--c);bottom:-200px;right:-200px;opacity:.07}
-  .o3{width:400px;height:400px;background:var(--r);bottom:20%;left:40%;opacity:.05}
-  @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  @keyframes af{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-  .fu{animation:fu .4s ease both}
-  .card{background:var(--d3);border:1px solid var(--gb);border-radius:20px;padding:22px;transition:border-color .25s,transform .25s}
-  .card:hover{border-color:rgba(255,255,255,0.12);transform:translateY(-1px)}
-  .kpi{background:var(--d3);border:1px solid var(--gb);border-radius:16px;padding:20px;transition:all .25s;position:relative;overflow:hidden}
-  .kpi:hover{border-color:rgba(255,255,255,0.13);transform:translateY(-2px)}
-  .kpi::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.02),transparent);pointer-events:none}
-  .tb{padding:7px 16px;border-radius:9px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;border:none}
-  .tb.a{background:var(--v);color:#fff}
-  .tb:not(.a){background:transparent;color:var(--t3)}
-  .tb:not(.a):hover{color:var(--t1)}
-  .dt{width:100%;border-collapse:collapse;font-size:13px}
-  .dt th{padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid rgba(255,255,255,.07)}
-  .dt td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t2);font-weight:500}
-  .dt tr:hover td{background:rgba(255,255,255,.02);cursor:pointer}
-  .dt tr.online td{background:rgba(16,185,129,0.03)}
-  .bs{padding:5px 12px;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;border:none}
-  .si{padding:9px 14px;background:var(--d4);border:1px solid var(--gb);border-radius:11px;color:var(--t1);font-family:'Montserrat',sans-serif;font-size:13px;font-weight:500;outline:none;transition:border-color .2s}
-  .si:focus{border-color:var(--vl)}.si::placeholder{color:var(--t3)}
-  .badge{padding:3px 9px;border-radius:7px;font-size:10px;font-weight:700}
-  .online-dot{width:8px;height:8px;border-radius:50%;background:var(--e);flex-shrink:0;animation:pulse 2s infinite;box-shadow:0 0 6px var(--e)}
-  .modal-o{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fu .2s ease}
-  .ai-insight{background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(6,182,212,.06));border:1px solid rgba(124,58,237,.2);border-radius:14px;padding:16px 18px;margin-bottom:10px;transition:all .2s}
-  .ai-insight:hover{border-color:rgba(124,58,237,.35);transform:translateX(3px)}
-  .live-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.25);border-radius:20px;font-size:10px;font-weight:700;color:#F87171}
-  .live-dot{width:6px;height:6px;border-radius:50%;background:#F43F5E;animation:blink 1.2s infinite}
-  .ban-row{background:rgba(244,63,94,0.04) !important}
-  code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--d4);padding:2px 7px;border-radius:5px;color:#67E8F9}
-`;
+/* ─── Utils ─── */
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—");
+const fmtTime = (d) => {
+  if (!d) return "";
+  const df = Date.now() - new Date(d).getTime();
+  if (df < 60000) return "just now";
+  if (df < 3600000) return `${Math.floor(df / 60000)}m ago`;
+  if (df < 86400000) return `${Math.floor(df / 3600000)}h ago`;
+  return fmtDate(d);
+};
 
-function Spinner(){return <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:60}}><div style={{width:38,height:38,borderRadius:"50%",border:"3px solid rgba(255,255,255,.07)",borderTopColor:"var(--vl)",animation:"spin .8s linear infinite"}}/></div>;}
-const CT=({active,payload,label})=>{if(!active||!payload?.length)return null;return<div style={{background:"var(--d3)",border:"1px solid var(--gb)",borderRadius:12,padding:"10px 14px",fontFamily:"Montserrat",fontSize:12,fontWeight:700}}>{label&&<div style={{color:"var(--t2)",marginBottom:4}}>{label}</div>}{payload.map((p,i)=><div key={i} style={{color:p.color||p.fill||"var(--vl)"}}>{p.name}: {typeof p.value==="number"&&p.value>999?p.value.toLocaleString():p.value}</div>)}</div>;};
-
-/* ─── Suspicious activity detector ─── */
 function isSuspicious(user) {
   const flags = [];
-  const now   = Date.now();
-  const created = new Date(user.createdAt).getTime();
-  const ageDays = (now - created) / 86400000;
-  /* Account too new + too many tasks = bot-like */
+  const ageDays = (Date.now() - new Date(user.createdAt).getTime()) / 86400000;
   if (ageDays < 0.5 && (user.taskCount || 0) > 50) flags.push("Unusually high task creation");
   if (user.status === "suspended") flags.push("Previously suspended");
-  if (!user.name || user.name.length < 2)           flags.push("Invalid display name");
-  if (user.email?.includes("+") && ageDays < 1)     flags.push("Plus-alias email on new account");
+  if (!user.name || user.name.length < 2) flags.push("Invalid display name");
+  if (user.email?.includes("+") && ageDays < 1) flags.push("Plus-alias email on new account");
   return flags;
 }
 
-const TABS = ["Overview","Live Users","Users","AI Insights","Alerts","Broadcast","System"];
-const fmtDate = d=>d?new Date(d).toLocaleDateString("en-KE",{day:"2-digit",month:"short",year:"numeric"}):"—";
-const fmtTime = d=>{if(!d)return"";const df=Date.now()-new Date(d).getTime();if(df<60000)return"just now";if(df<3600000)return`${Math.floor(df/60000)}m ago`;if(df<86400000)return`${Math.floor(df/3600000)}h ago`;return fmtDate(d);};
+const TABS = ["Overview", "Live Users", "Users", "AI Insights", "Alerts", "Broadcast", "System"];
+
+/* ─── Tiny reusable components ─── */
+const Spinner = ({ size = "md" }) => (
+  <div className="flex items-center justify-center py-12">
+    <Loader2 className={`animate-spin text-violet-500 ${size === "sm" ? "w-6 h-6" : "w-10 h-10"}`} />
+  </div>
+);
+
+const CT = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-[#14141F] border border-white/10 rounded-xl px-3.5 py-2.5 font-montserrat text-xs font-bold shadow-xl">
+      {label && <div className="text-[#9090B8] mb-1">{label}</div>}
+      {payload.map((p, i) => (
+        <div key={i} style={{ color: p.color || p.fill || "#8B5CF6" }}>
+          {p.name}: {typeof p.value === "number" && p.value > 999 ? p.value.toLocaleString() : p.value}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const Avatar = ({ user, size = 30 }) => (
+  <div
+    className="rounded-full flex items-center justify-center text-white font-extrabold shrink-0 bg-cover bg-center"
+    style={{
+      width: size, height: size, fontSize: size * 0.36,
+      background: user.avatarUrl ? `url(${user.avatarUrl}) center/cover` : "linear-gradient(135deg,#7C3AED,#06B6D4)",
+    }}
+  >
+    {!user.avatarUrl && (user.name?.charAt(0) || "?")}
+  </div>
+);
+
+const Badge = ({ tone = "neutral", children, ...rest }) => {
+  const tones = {
+    neutral: "bg-white/[0.06] text-[#505075]",
+    violet: "bg-violet-500/15 text-violet-300",
+    emerald: "bg-emerald-500/15 text-emerald-300",
+    rose: "bg-rose-500/15 text-rose-300",
+    amber: "bg-amber-500/15 text-amber-300",
+    cyan: "bg-cyan-500/15 text-cyan-300",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${tones[tone]}`} {...rest}>
+      {children}
+    </span>
+  );
+};
+
+const SmallBtn = ({ tone = "neutral", children, ...rest }) => {
+  const tones = {
+    neutral: "bg-white/[0.06] text-[#9090B8] hover:bg-white/10",
+    rose: "bg-rose-500/10 text-rose-300 hover:bg-rose-500/20",
+    emerald: "bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20",
+    violet: "bg-violet-500/10 text-violet-300 hover:bg-violet-500/20",
+    danger: "bg-rose-500/15 text-rose-400 hover:bg-rose-500/25",
+  };
+  return (
+    <button
+      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${tones[tone]}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+};
 
 export default function AdminDashboard() {
-  useEffect(()=>{const id="adm-s";if(!document.getElementById(id)){const s=document.createElement("style");s.id=id;s.textContent=S;document.head.prepend(s);}}, []);
-
-  const [tab,        setTab]        = useState("Overview");
-  const [stats,      setStats]      = useState(null);
-  const [users,      setUsers]      = useState([]);
-  const [onlineUsers,setOnlineUsers]= useState([]);
+  const [tab, setTab] = useState("Overview");
+  const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [growthData, setGrowthData] = useState([]);
-  const [alerts,     setAlerts]     = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [aiInsights, setAiInsights] = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [aiLoading,  setAiLoading]  = useState(false);
-  const [uSearch,    setUSearch]    = useState("");
-  const [uFilter,    setUFilter]    = useState("all");
-  const [uPage,      setUPage]      = useState(1);
-  const [selUser,    setSelUser]    = useState(null);
-  const [actionMsg,  setActionMsg]  = useState("");
-  const [actionErr,  setActionErr]  = useState("");
-  const [broadcast,  setBroadcast]  = useState({title:"",message:"",type:"system"});
-  const [bSending,   setBSending]   = useState(false);
-  const [bSent,      setBSent]      = useState(false);
-  const [newRegAlert,setNewRegAlert]= useState(null);
+  const [loading, setLoading] = useState(true);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [uSearch, setUSearch] = useState("");
+  const [uFilter, setUFilter] = useState("all");
+  const [uPage, setUPage] = useState(1);
+  const [selUser, setSelUser] = useState(null);
+  const [actionMsg, setActionMsg] = useState("");
+  const [actionErr, setActionErr] = useState("");
+  const [broadcast, setBroadcast] = useState({ title: "", message: "", type: "system" });
+  const [bSending, setBSending] = useState(false);
+  const [bSent, setBSent] = useState(false);
+  const [newRegAlert, setNewRegAlert] = useState(null);
   const lastUserCount = useRef(0);
   const PER_PAGE = 20;
 
-  /* ─── Initial data load ─── */
-  const loadAll = useCallback(async()=>{
+  const loadAll = useCallback(async () => {
     try {
-      const [sR,uR,aR,gR] = await Promise.all([
-        API.get("/admin/stats").catch(()=>({data:null})),
-        API.get("/admin/users").catch(()=>({data:{users:[]}})),
-        API.get("/admin/alerts").catch(()=>({data:[]})),
-        API.get("/admin/growth?days=30").catch(()=>({data:[]})),
+      const [sR, uR, aR, gR] = await Promise.all([
+        API.get("/admin/stats").catch(() => ({ data: null })),
+        API.get("/admin/users").catch(() => ({ data: { users: [] } })),
+        API.get("/admin/alerts").catch(() => ({ data: [] })),
+        API.get("/admin/growth?days=30").catch(() => ({ data: [] })),
       ]);
       const rawUsers = uR.data?.users || uR.data || [];
       setStats(sR.data);
       setUsers(rawUsers);
-      setAlerts(aR.data||[]);
-      setGrowthData(gR.data||[]);
-      /* Simulate online presence — in production use WebSockets / Redis */
-      const fakeOnline = rawUsers.filter(()=>Math.random()<0.18).map(u=>u._id);
+      setAlerts(aR.data || []);
+      setGrowthData(gR.data || []);
+      const fakeOnline = rawUsers.filter(() => Math.random() < 0.18).map((u) => u._id);
       setOnlineUsers(fakeOnline);
-    } finally { setLoading(false); }
-  },[]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  useEffect(()=>{loadAll();}, [loadAll]);
+  useEffect(() => { loadAll(); }, [loadAll]);
 
-  /* ─── Push alert when new user registers ─── */
-  useEffect(()=>{
-    const poll = setInterval(async()=>{
+  useEffect(() => {
+    const poll = setInterval(async () => {
       try {
         const r = await API.get("/admin/stats");
-        const total = r.data?.totalUsers||0;
+        const total = r.data?.totalUsers || 0;
         if (lastUserCount.current > 0 && total > lastUserCount.current) {
           const diff = total - lastUserCount.current;
-          setNewRegAlert({ count:diff, time:new Date() });
-          /* Auto-dismiss after 8s */
-          setTimeout(()=>setNewRegAlert(null), 8000);
+          setNewRegAlert({ count: diff, time: new Date() });
+          setTimeout(() => setNewRegAlert(null), 8000);
         }
         lastUserCount.current = total;
       } catch {}
-    }, 30000); /* poll every 30s */
-    return ()=>clearInterval(poll);
-  },[]);
+    }, 30000);
+    return () => clearInterval(poll);
+  }, []);
 
-  /* ─── AI platform insights ─── */
-  const generateAiInsights = async()=>{
+  const generateAiInsights = async () => {
     setAiLoading(true);
     try {
-      const r = await API.post("/ai/analyze",{
-        tasks:[{title:"Platform analysis",status:"pending",priority:"high"}],
-        transactions:[],
-        adminContext:{
-          totalUsers:  stats?.totalUsers||users.length,
-          activeUsers: stats?.activeUsers||0,
-          proUsers:    stats?.proUsers||0,
-          churnRate:   stats?.churnRate||0,
-          revenue:     stats?.revenue||0,
-        }
+      const r = await API.post("/ai/analyze", {
+        tasks: [{ title: "Platform analysis", status: "pending", priority: "high" }],
+        transactions: [],
+        adminContext: {
+          totalUsers: stats?.totalUsers || users.length,
+          activeUsers: stats?.activeUsers || 0,
+          proUsers: stats?.proUsers || 0,
+          churnRate: stats?.churnRate || 0,
+          revenue: stats?.revenue || 0,
+        },
       });
-      const raw = r.data?.insights||[];
-      setAiInsights(raw.length>0?raw:[
-        `Platform has ${stats?.totalUsers||users.length} total users with ${Math.round(((stats?.activeUsers||0)/(stats?.totalUsers||1))*100)}% engagement rate.`,
-        `Pro conversion rate stands at ${Math.round(((stats?.proUsers||0)/(stats?.totalUsers||1))*100)}% — industry average is 3–8%.`,
-        `${stats?.churnRate||0}% of users have been inactive 30+ days. Consider a re-engagement email campaign.`,
+      const raw = r.data?.insights || [];
+      setAiInsights(raw.length > 0 ? raw : [
+        `Platform has ${stats?.totalUsers || users.length} total users with ${Math.round(((stats?.activeUsers || 0) / (stats?.totalUsers || 1)) * 100)}% engagement rate.`,
+        `Pro conversion rate stands at ${Math.round(((stats?.proUsers || 0) / (stats?.totalUsers || 1)) * 100)}% — industry average is 3–8%.`,
+        `${stats?.churnRate || 0}% of users have been inactive 30+ days. Consider a re-engagement email campaign.`,
         "Peak signup days appear to be weekdays. Consider running promotions on weekends.",
-        `Monthly recurring revenue estimate: KES ${((stats?.revenue||0)).toLocaleString("en-KE")}. Growing ${users.filter(u=>new Date(u.createdAt)>new Date(Date.now()-2592000000)).length} users this month.`,
+        `Monthly recurring revenue estimate: KES ${(stats?.revenue || 0).toLocaleString("en-KE")}. Growing ${users.filter((u) => new Date(u.createdAt) > new Date(Date.now() - 2592000000)).length} users this month.`,
       ]);
     } catch {
       setAiInsights([
         "AI service unavailable. Showing computed insights.",
-        `${users.length} registered users · ${users.filter(u=>u.status==="active").length} active.`,
-        `${users.filter(u=>u.plan==="pro").length} Pro subscribers generating revenue.`,
+        `${users.length} registered users · ${users.filter((u) => u.status === "active").length} active.`,
+        `${users.filter((u) => u.plan === "pro").length} Pro subscribers generating revenue.`,
       ]);
-    } finally { setAiLoading(false); }
-  };
-  useEffect(()=>{ if(tab==="AI Insights"&&aiInsights.length===0) generateAiInsights(); },[tab]);
-
-  /* ─── User actions ─── */
-  const toast=(msg,err=false)=>{ if(err){setActionErr(msg);setTimeout(()=>setActionErr(""),4000);}else{setActionMsg(msg);setTimeout(()=>setActionMsg(""),4000);}};
-
-  const suspendUser=async(id)=>{
-    try{ await API.put(`/admin/users/${id}/suspend`); setUsers(p=>p.map(u=>u._id===id?{...u,status:"suspended"}:u)); toast("User suspended"); }
-    catch{ toast("Failed",true); }
-  };
-  const activateUser=async(id)=>{
-    try{ await API.put(`/admin/users/${id}/activate`); setUsers(p=>p.map(u=>u._id===id?{...u,status:"active"}:u)); toast("User reactivated"); }
-    catch{ toast("Failed",true); }
-  };
-  const upgradeUser=async(id)=>{
-    try{ await API.put(`/admin/users/${id}/upgrade`); setUsers(p=>p.map(u=>u._id===id?{...u,plan:"pro"}:u)); toast("Upgraded to Pro ✓"); }
-    catch{ toast("Failed",true); }
-  };
-  const deleteUser=async(id,name)=>{
-    if(!window.confirm(`Permanently delete ${name}? This cannot be undone.`)) return;
-    try{ await API.delete(`/admin/users/${id}`); setUsers(p=>p.filter(u=>u._id!==id)); setSelUser(null); toast("User deleted"); }
-    catch{ toast("Failed",true); }
+    } finally {
+      setAiLoading(false);
+    }
   };
 
-  /* ─── Auto-ban suspicious user ─── */
-  const autoBan=async(user)=>{
-    if(!window.confirm(`Auto-ban ${user.name} (${user.email}) for suspicious activity?`)) return;
+  useEffect(() => {
+    if (tab === "AI Insights" && aiInsights.length === 0) generateAiInsights();
+    // eslint-disable-next-line
+  }, [tab]);
+
+  const toast = (msg, err = false) => {
+    if (err) { setActionErr(msg); setTimeout(() => setActionErr(""), 4000); }
+    else { setActionMsg(msg); setTimeout(() => setActionMsg(""), 4000); }
+  };
+
+  const suspendUser = async (id) => {
+    try { await API.put(`/admin/users/${id}/suspend`); setUsers((p) => p.map((u) => (u._id === id ? { ...u, status: "suspended" } : u))); toast("User suspended"); }
+    catch { toast("Failed", true); }
+  };
+  const activateUser = async (id) => {
+    try { await API.put(`/admin/users/${id}/activate`); setUsers((p) => p.map((u) => (u._id === id ? { ...u, status: "active" } : u))); toast("User reactivated"); }
+    catch { toast("Failed", true); }
+  };
+  const upgradeUser = async (id) => {
+    try { await API.put(`/admin/users/${id}/upgrade`); setUsers((p) => p.map((u) => (u._id === id ? { ...u, plan: "pro" } : u))); toast("Upgraded to Pro ✓"); }
+    catch { toast("Failed", true); }
+  };
+  const deleteUser = async (id, name) => {
+    if (!window.confirm(`Permanently delete ${name}? This cannot be undone.`)) return;
+    try { await API.delete(`/admin/users/${id}`); setUsers((p) => p.filter((u) => u._id !== id)); setSelUser(null); toast("User deleted"); }
+    catch { toast("Failed", true); }
+  };
+  const autoBan = async (user) => {
+    if (!window.confirm(`Auto-ban ${user.name} (${user.email}) for suspicious activity?`)) return;
     await suspendUser(user._id);
-    await API.post("/notifications",{title:"Security Alert",message:`Auto-ban triggered for ${user.email}`,type:"system"}).catch(()=>{});
-    toast(`🚫 Auto-ban applied to ${user.name}`);
+    await API.post("/notifications", { title: "Security Alert", message: `Auto-ban triggered for ${user.email}`, type: "system" }).catch(() => {});
+    toast(`Auto-ban applied to ${user.name}`);
   };
 
-  /* ─── Broadcast notification ─── */
-  const sendBroadcast=async()=>{
-    if(!broadcast.title||!broadcast.message) return;
+  const sendBroadcast = async () => {
+    if (!broadcast.title || !broadcast.message) return;
     setBSending(true);
-    try{
-      const r=await API.post("/admin/notify",broadcast);
-      setBSent(true); setBroadcast({title:"",message:"",type:"system"});
-      toast(`📢 Broadcast sent to ${r.data?.sent||"all"} users`);
-      setTimeout(()=>setBSent(false),3000);
-    } catch { toast("Broadcast failed",true); }
+    try {
+      const r = await API.post("/admin/notify", broadcast);
+      setBSent(true);
+      setBroadcast({ title: "", message: "", type: "system" });
+      toast(`Broadcast sent to ${r.data?.sent || "all"} users`);
+      setTimeout(() => setBSent(false), 3000);
+    } catch { toast("Broadcast failed", true); }
     finally { setBSending(false); }
   };
 
-  /* ─── Derived data ─── */
-  const ds = stats||{
-    totalUsers:   users.length,
-    activeUsers:  users.filter(u=>u.status==="active").length,
-    proUsers:     users.filter(u=>u.plan==="pro").length,
-    newToday:     users.filter(u=>u.createdAt?.startsWith(new Date().toISOString().split("T")[0])).length,
-    revenue:      users.filter(u=>u.plan==="pro").length*2999,
-    churnRate:    2.4,
+  const ds = stats || {
+    totalUsers: users.length,
+    activeUsers: users.filter((u) => u.status === "active").length,
+    proUsers: users.filter((u) => u.plan === "pro").length,
+    newToday: users.filter((u) => u.createdAt?.startsWith(new Date().toISOString().split("T")[0])).length,
+    revenue: users.filter((u) => u.plan === "pro").length * 2999,
+    churnRate: 2.4,
     avgTasksPerUser: 18,
   };
 
   const visibleUsers = users
-    .filter(u=>uFilter==="all"||u.status===uFilter||(uFilter==="suspicious"&&isSuspicious(u).length>0)||(uFilter==="online"&&onlineUsers.includes(u._id)))
-    .filter(u=>!uSearch||u.name?.toLowerCase().includes(uSearch.toLowerCase())||u.email?.toLowerCase().includes(uSearch.toLowerCase()));
-  const pagedUsers = visibleUsers.slice(0, uPage*PER_PAGE);
+    .filter((u) =>
+      uFilter === "all" ||
+      u.status === uFilter ||
+      (uFilter === "suspicious" && isSuspicious(u).length > 0) ||
+      (uFilter === "online" && onlineUsers.includes(u._id))
+    )
+    .filter((u) =>
+      !uSearch ||
+      u.name?.toLowerCase().includes(uSearch.toLowerCase()) ||
+      u.email?.toLowerCase().includes(uSearch.toLowerCase())
+    );
+  const pagedUsers = visibleUsers.slice(0, uPage * PER_PAGE);
 
-  const planChart=[{name:"Free",value:users.filter(u=>u.plan!=="pro").length,fill:"#505075"},{name:"Pro",value:users.filter(u=>u.plan==="pro").length,fill:"#7C3AED"}].filter(d=>d.value>0);
-  const statusChart=[{name:"Active",value:users.filter(u=>u.status==="active").length,fill:"#10B981"},{name:"Suspended",value:users.filter(u=>u.status==="suspended").length,fill:"#F43F5E"},{name:"Inactive",value:users.filter(u=>u.status==="inactive").length,fill:"#505075"}].filter(d=>d.value>0);
-  const suspCount = users.filter(u=>isSuspicious(u).length>0).length;
+  const planChart = [
+    { name: "Free", value: users.filter((u) => u.plan !== "pro").length, fill: "#505075" },
+    { name: "Pro", value: users.filter((u) => u.plan === "pro").length, fill: "#7C3AED" },
+  ].filter((d) => d.value > 0);
 
-  const GD = growthData.length>0 ? growthData : (() => {
-    return Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(29-i));return{date:d.toLocaleDateString("en-KE",{day:"2-digit",month:"short"}),users:Math.round(users.length*(0.3+(i/40))),new:Math.floor(Math.random()*8)};});
-  })();
+  const statusChart = [
+    { name: "Active", value: users.filter((u) => u.status === "active").length, fill: "#10B981" },
+    { name: "Suspended", value: users.filter((u) => u.status === "suspended").length, fill: "#F43F5E" },
+    { name: "Inactive", value: users.filter((u) => u.status === "inactive").length, fill: "#505075" },
+  ].filter((d) => d.value > 0);
 
-  return(
-    <div style={{minHeight:"100vh",background:"var(--d1)",fontFamily:"Montserrat,sans-serif",position:"relative",overflow:"hidden"}}>
-      <div className="orb o1"/><div className="orb o2"/><div className="orb o3"/>
+  const suspCount = users.filter((u) => isSuspicious(u).length > 0).length;
 
-      {/* New registration push alert */}
-      {newRegAlert&&(
-        <div style={{position:"fixed",top:20,right:20,zIndex:9999,background:"var(--d3)",border:"1px solid rgba(16,185,129,.3)",borderRadius:16,padding:"14px 18px",boxShadow:"0 20px 60px rgba(0,0,0,.6)",display:"flex",alignItems:"center",gap:12,animation:"fu .3s ease"}}>
-          <div style={{width:40,height:40,borderRadius:"50%",background:"rgba(16,185,129,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🎉</div>
-          <div>
-            <div style={{fontWeight:800,fontSize:14,color:"var(--t1)"}}>New registration!</div>
-            <div style={{fontSize:12,color:"var(--t2)",marginTop:2}}>{newRegAlert.count} new user{newRegAlert.count>1?"s":""} just signed up</div>
+  const GD = growthData.length > 0 ? growthData : Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (29 - i));
+    return {
+      date: d.toLocaleDateString("en-KE", { day: "2-digit", month: "short" }),
+      users: Math.round(users.length * (0.3 + i / 40)),
+      new: Math.floor(Math.random() * 8),
+    };
+  });
+
+  const KPIS = [
+    { Icon: Users, label: "Total Users", val: ds.totalUsers, color: "text-violet-400", dotBg: "bg-violet-500", sub: "All registered", trend: `+${ds.newToday} today` },
+    { Icon: Activity, label: "Active Users", val: ds.activeUsers, color: "text-emerald-400", dotBg: "bg-emerald-500", sub: "Last 30 days", trend: `${Math.round((ds.activeUsers / Math.max(ds.totalUsers, 1)) * 100)}% of total` },
+    { Icon: Crown, label: "Pro Subscribers", val: ds.proUsers || 0, color: "text-amber-400", dotBg: "bg-amber-500", sub: "Paying users", trend: `KES ${((ds.proUsers || 0) * 2999).toLocaleString()}/mo` },
+    { Icon: Radio, label: "Live Now", val: onlineUsers.length, color: "text-rose-400", dotBg: "bg-rose-500", sub: "Online users", trend: "Real-time" },
+    { Icon: UserPlus, label: "New Today", val: ds.newToday || 0, color: "text-cyan-400", dotBg: "bg-cyan-500", sub: "Signed up today", trend: "Last 24h" },
+    { Icon: AlertTriangle, label: "Suspicious", val: suspCount, color: suspCount > 0 ? "text-rose-400" : "text-emerald-400", dotBg: suspCount > 0 ? "bg-rose-500" : "bg-emerald-500", sub: "Flagged accounts", trend: suspCount > 0 ? "Action needed" : "All clear" },
+    { Icon: DollarSign, label: "MRR", val: `KES ${(ds.revenue || 0).toLocaleString("en-KE")}`, color: "text-emerald-400", dotBg: "bg-emerald-500", sub: "Monthly revenue", trend: "Pro × KES 2,999" },
+    { Icon: TrendingDown, label: "Churn Risk", val: `${ds.churnRate || 0}%`, color: "text-amber-400", dotBg: "bg-amber-500", sub: "Inactive 30d+", trend: "Monitor closely" },
+  ];
+
+  const SYSTEM_STATUS = [
+    { Icon: Globe, l: "API Service", s: "Operational", ok: true },
+    { Icon: Brain, l: "AI Engine", s: "Operational", ok: true },
+    { Icon: Database, l: "MongoDB Atlas", s: "Operational", ok: true },
+    { Icon: Lock, l: "Auth Service", s: "Operational", ok: true },
+    { Icon: Mail, l: "Email Service", s: "Operational", ok: true },
+    { Icon: HardDrive, l: "File Storage", s: "Degraded", ok: false },
+    { Icon: BarChart3, l: "Analytics", s: "Operational", ok: true },
+    { Icon: Bell, l: "Notifications", s: "Operational", ok: true },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#080810] font-montserrat text-[#F0F0FF] relative overflow-hidden">
+
+      {/* Orbs */}
+      <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-60 -left-48 w-[700px] h-[700px] max-w-[60vw] max-h-[60vw] bg-violet-600 opacity-[0.09] rounded-full blur-[100px]" />
+        <div className="absolute -bottom-48 -right-48 w-[600px] h-[600px] max-w-[60vw] max-h-[60vw] bg-cyan-500 opacity-[0.07] rounded-full blur-[100px]" />
+      </div>
+
+      {/* New registration toast */}
+      {newRegAlert && (
+        <div className="fixed top-5 right-4 sm:right-5 z-[9999] bg-[#14141F] border border-emerald-500/30 rounded-2xl px-4 py-3.5 shadow-2xl flex items-center gap-3 animate-fade-up max-w-[calc(100vw-2rem)]">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+            <UserPlus className="w-5 h-5 text-emerald-400" />
           </div>
-          <button onClick={()=>setNewRegAlert(null)} style={{marginLeft:8,background:"none",border:"none",color:"var(--t3)",cursor:"pointer",fontSize:18}}>✕</button>
+          <div className="min-w-0">
+            <div className="font-extrabold text-sm">New registration!</div>
+            <div className="text-xs text-[#9090B8] mt-0.5 truncate">
+              {newRegAlert.count} new user{newRegAlert.count > 1 ? "s" : ""} just signed up
+            </div>
+          </div>
+          <button onClick={() => setNewRegAlert(null)} className="text-[#505075] hover:text-white shrink-0">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
-      <div style={{position:"relative",zIndex:1,padding:"32px 28px 60px",maxWidth:1400,margin:"0 auto"}}>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-16">
 
-        {/* Header */}
-        <div className="fu" style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:16,marginBottom:28}}>
-          <div>
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:6}}>
-              <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,var(--r),var(--v))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🛡️</div>
-              <h1 style={{fontWeight:900,fontSize:24,letterSpacing:-0.8}}>Admin Console</h1>
-              <span style={{padding:"3px 10px",background:"rgba(244,63,94,.15)",border:"1px solid rgba(244,63,94,.3)",borderRadius:8,fontSize:11,fontWeight:700,color:"#FCA5A5"}}>ADMIN</span>
-              {onlineUsers.length>0&&<div className="live-badge"><div className="live-dot"/>{onlineUsers.length} online</div>}
+        {/* ─── Header ─── */}
+        <div className="animate-fade-up flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-7">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5 mb-2">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-violet-600 flex items-center justify-center shrink-0">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="font-black text-xl sm:text-2xl tracking-tight">Admin Console</h1>
+              <Badge tone="rose">ADMIN</Badge>
+              {onlineUsers.length > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-[10px] font-bold text-rose-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  {onlineUsers.length} online
+                </span>
+              )}
             </div>
-            <p style={{fontSize:13,color:"var(--t3)",fontWeight:500}}>
-              {ds.totalUsers} users · {ds.activeUsers} active · Last refresh: {new Date().toLocaleTimeString("en-KE",{hour:"2-digit",minute:"2-digit"})}
+            <p className="text-[12px] sm:text-[13px] text-[#505075] font-medium">
+              {ds.totalUsers} users · {ds.activeUsers} active · Last refresh: {new Date().toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })}
             </p>
           </div>
-          <div style={{display:"flex",gap:8}}>
-            <button onClick={loadAll} style={{padding:"9px 16px",background:"rgba(124,58,237,.1)",border:"1px solid rgba(124,58,237,.2)",borderRadius:11,color:"#C4B5FD",fontFamily:"Montserrat,sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>↻ Refresh</button>
-            <button onClick={()=>setTab("Broadcast")} style={{padding:"9px 16px",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.2)",borderRadius:11,color:"#6EE7B7",fontFamily:"Montserrat,sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>📢 Broadcast</button>
+
+          <div className="flex gap-2 shrink-0">
+            <button onClick={loadAll} className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-violet-500/10 border border-violet-500/20 text-violet-300 rounded-xl text-xs font-bold hover:bg-violet-500/20 transition">
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh
+            </button>
+            <button onClick={() => setTab("Broadcast")} className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-xl text-xs font-bold hover:bg-emerald-500/20 transition">
+              <Megaphone className="w-3.5 h-3.5" /> Broadcast
+            </button>
           </div>
         </div>
 
-        {actionMsg&&<div style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.25)",borderRadius:12,padding:"10px 16px",marginBottom:16,fontSize:13,fontWeight:600,color:"#6EE7B7"}}>{actionMsg}</div>}
-        {actionErr&&<div style={{background:"rgba(244,63,94,.1)",border:"1px solid rgba(244,63,94,.25)",borderRadius:12,padding:"10px 16px",marginBottom:16,fontSize:13,fontWeight:600,color:"#FCA5A5"}}>{actionErr}</div>}
-        {suspCount>0&&<div style={{background:"rgba(244,63,94,.07)",border:"1px solid rgba(244,63,94,.2)",borderRadius:12,padding:"10px 16px",marginBottom:16,fontSize:13,fontWeight:600,color:"#FCA5A5",display:"flex",alignItems:"center",gap:10}}>
-          🚨 {suspCount} user{suspCount>1?"s":""} flagged as suspicious &nbsp;
-          <button onClick={()=>{setTab("Users");setUFilter("suspicious");}} style={{background:"rgba(244,63,94,.15)",border:"1px solid rgba(244,63,94,.3)",borderRadius:8,padding:"3px 10px",color:"#FCA5A5",fontFamily:"Montserrat,sans-serif",fontSize:11,fontWeight:700,cursor:"pointer"}}>Review →</button>
-        </div>}
+        {/* Toasts */}
+        {actionMsg && (
+          <div className="mb-4 flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 rounded-xl px-4 py-2.5 text-sm font-semibold">
+            <Check className="w-4 h-4 shrink-0" /> {actionMsg}
+          </div>
+        )}
+        {actionErr && (
+          <div className="mb-4 flex items-center gap-2 bg-rose-500/10 border border-rose-500/25 text-rose-300 rounded-xl px-4 py-2.5 text-sm font-semibold">
+            <X className="w-4 h-4 shrink-0" /> {actionErr}
+          </div>
+        )}
+        {suspCount > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-2.5 bg-rose-500/[0.07] border border-rose-500/20 rounded-xl px-4 py-2.5 text-sm font-semibold text-rose-300">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span className="flex-1 min-w-0">{suspCount} user{suspCount > 1 ? "s" : ""} flagged as suspicious</span>
+            <button onClick={() => { setTab("Users"); setUFilter("suspicious"); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-500/15 border border-rose-500/30 rounded-md text-[11px] font-bold hover:bg-rose-500/25 transition">
+              Review <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+        )}
 
-        {/* Tabs */}
-        <div style={{display:"flex",gap:4,background:"var(--d3)",borderRadius:12,padding:4,marginBottom:24,width:"fit-content",flexWrap:"wrap"}}>
-          {TABS.map(t=><button key={t} className={`tb ${tab===t?"a":""}`} onClick={()=>setTab(t)}>{t}</button>)}
+        {/* ─── Tabs ─── */}
+        <div className="mb-6 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+          <div className="inline-flex gap-1 bg-[#14141F] rounded-xl p-1 w-max">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
+                  tab === t ? "bg-violet-600 text-white" : "text-[#505075] hover:text-white"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {loading?<Spinner/>:(
+        {loading ? <Spinner /> : (
           <>
             {/* ═══ OVERVIEW ═══ */}
-            {tab==="Overview"&&(
+            {tab === "Overview" && (
               <>
-                {/* KPI grid */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:24}}>
-                  {[
-                    {icon:"👥",label:"Total Users",     val:ds.totalUsers,           color:"var(--vl)", sub:"All registered",      trend:`+${ds.newToday} today`},
-                    {icon:"⚡",label:"Active Users",    val:ds.activeUsers,          color:"var(--e)",  sub:"Last 30 days",        trend:`${Math.round((ds.activeUsers/Math.max(ds.totalUsers,1))*100)}% of total`},
-                    {icon:"✦", label:"Pro Subscribers", val:ds.proUsers||0,          color:"var(--a)",  sub:"Paying users",        trend:`KES ${((ds.proUsers||0)*2999).toLocaleString()}/mo`},
-                    {icon:"🔴",label:"Live Now",        val:onlineUsers.length,      color:"var(--r)",  sub:"Online users",        trend:"Real-time"},
-                    {icon:"🆕",label:"New Today",       val:ds.newToday||0,          color:"var(--c)",  sub:"Signed up today",     trend:"Last 24h"},
-                    {icon:"🚨",label:"Suspicious",      val:suspCount,               color:suspCount>0?"var(--r)":"var(--e)", sub:"Flagged accounts", trend:suspCount>0?"Action needed":"All clear"},
-                    {icon:"💰",label:"MRR",             val:`KES ${((ds.revenue||0)).toLocaleString("en-KE")}`, color:"var(--e)", sub:"Monthly revenue", trend:"Pro × KES 2,999"},
-                    {icon:"📉",label:"Churn Risk",      val:`${ds.churnRate||0}%`,   color:"var(--a)",  sub:"Inactive 30d+",      trend:"Monitor closely"},
-                  ].map((k,i)=>(
-                    <div key={k.label} className="kpi fu" style={{animationDelay:`${i*40}ms`}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                        <span style={{fontSize:20}}>{k.icon}</span>
-                        <div style={{width:7,height:7,borderRadius:"50%",background:k.color,animation:"pulse 2.5s infinite"}}/>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                  {KPIS.map(({ Icon, label, val, color, dotBg, sub, trend }, i) => (
+                    <div
+                      key={label}
+                      className="animate-fade-up relative bg-[#14141F] border border-white/[0.07] rounded-2xl p-4 sm:p-5 overflow-hidden hover:border-white/[0.13] hover:-translate-y-0.5 transition-all"
+                      style={{ animationDelay: `${i * 40}ms` }}
+                    >
+                      <div className="flex items-center justify-between mb-2.5">
+                        <Icon className={`w-5 h-5 ${color}`} />
+                        <span className={`w-2 h-2 rounded-full ${dotBg} animate-pulse`} />
                       </div>
-                      <div style={{fontSize:10,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:.8}}>{k.label}</div>
-                      <div style={{fontSize:24,fontWeight:900,letterSpacing:-1,marginTop:4,color:k.color}}>{typeof k.val==="number"?k.val.toLocaleString():k.val}</div>
-                      <div style={{fontSize:10,color:"var(--t3)",marginTop:3,fontWeight:600}}>{k.sub}</div>
-                      <div style={{fontSize:11,color:k.color,fontWeight:600,marginTop:4,opacity:.8}}>→ {k.trend}</div>
+                      <div className="text-[10px] font-bold text-[#505075] uppercase tracking-wider">{label}</div>
+                      <div className={`text-xl sm:text-2xl font-black tracking-tight mt-1 ${color} truncate`}>
+                        {typeof val === "number" ? val.toLocaleString() : val}
+                      </div>
+                      <div className="text-[10px] text-[#505075] mt-1 font-semibold">{sub}</div>
+                      <div className={`text-[11px] font-semibold mt-1 opacity-80 ${color}`}>→ {trend}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Growth + pies */}
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:20,marginBottom:20}}>
-                  <div className="card fu" style={{animationDelay:"360ms"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,fontWeight:700,fontSize:14,marginBottom:14}}>
-                      <span style={{width:7,height:7,borderRadius:"50%",background:"var(--c)",display:"inline-block"}}/>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 mb-5">
+                  <div className="animate-fade-up lg:col-span-2 bg-[#14141F] border border-white/[0.07] rounded-2xl p-5 sm:p-6">
+                    <div className="flex items-center gap-2 font-bold text-sm mb-3.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
                       User Growth (30 days)
                     </div>
-                    <div style={{height:220}}>
+                    <div className="h-56">
                       <ResponsiveContainer>
-                        <AreaChart data={GD} margin={{top:5,right:5,left:-20,bottom:0}}>
+                        <AreaChart data={GD} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                           <defs>
-                            <linearGradient id="ug1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#7C3AED" stopOpacity={0.3}/><stop offset="100%" stopColor="#7C3AED" stopOpacity={0}/></linearGradient>
-                            <linearGradient id="ug2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10B981" stopOpacity={0.2}/><stop offset="100%" stopColor="#10B981" stopOpacity={0}/></linearGradient>
+                            <linearGradient id="ug1" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.3} />
+                              <stop offset="100%" stopColor="#7C3AED" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="ug2" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#10B981" stopOpacity={0.2} />
+                              <stop offset="100%" stopColor="#10B981" stopOpacity={0} />
+                            </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)"/>
-                          <XAxis dataKey="date" tick={{fill:"var(--t3)",fontSize:9,fontFamily:"Montserrat",fontWeight:600}} axisLine={false} tickLine={false} interval={4}/>
-                          <YAxis tick={{fill:"var(--t3)",fontSize:9,fontFamily:"Montserrat",fontWeight:600}} axisLine={false} tickLine={false}/>
-                          <Tooltip content={<CT/>}/>
-                          <Area type="monotone" dataKey="users" name="Total" stroke="#7C3AED" fill="url(#ug1)" strokeWidth={2}/>
-                          <Area type="monotone" dataKey="new"   name="New"   stroke="#10B981" fill="url(#ug2)" strokeWidth={2}/>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                          <XAxis dataKey="date" tick={{ fill: "#505075", fontSize: 9, fontWeight: 600 }} axisLine={false} tickLine={false} interval={4} />
+                          <YAxis tick={{ fill: "#505075", fontSize: 9, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                          <Tooltip content={<CT />} />
+                          <Area type="monotone" dataKey="users" name="Total" stroke="#7C3AED" fill="url(#ug1)" strokeWidth={2} />
+                          <Area type="monotone" dataKey="new" name="New" stroke="#10B981" fill="url(#ug2)" strokeWidth={2} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:16}}>
-                    <div className="card" style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:13,marginBottom:10}}>Plan Split</div>
-                      <div style={{height:120}}><ResponsiveContainer><PieChart><Pie data={planChart} dataKey="value" cx="50%" cy="50%" outerRadius={50} paddingAngle={4} strokeWidth={0}>{planChart.map((e,i)=><Cell key={i} fill={e.fill}/>)}</Pie><Tooltip content={<CT/>}/></PieChart></ResponsiveContainer></div>
-                      <div style={{display:"flex",gap:12,justifyContent:"center"}}>{planChart.map(d=><div key={d.name} style={{display:"flex",alignItems:"center",gap:5}}><div style={{width:7,height:7,borderRadius:"50%",background:d.fill}}/><span style={{fontSize:10,fontWeight:600,color:"var(--t2)"}}>{d.name} ({d.value})</span></div>)}</div>
+
+                  <div className="flex flex-col gap-4">
+                    <div className="bg-[#14141F] border border-white/[0.07] rounded-2xl p-5">
+                      <div className="font-bold text-sm mb-2.5">Plan Split</div>
+                      <div className="h-28">
+                        <ResponsiveContainer>
+                          <PieChart>
+                            <Pie data={planChart} dataKey="value" cx="50%" cy="50%" outerRadius={48} paddingAngle={4} strokeWidth={0}>
+                              {planChart.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                            </Pie>
+                            <Tooltip content={<CT />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex flex-wrap gap-3 justify-center mt-2">
+                        {planChart.map((d) => (
+                          <div key={d.name} className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: d.fill }} />
+                            <span className="text-[10px] font-semibold text-[#9090B8]">{d.name} ({d.value})</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="card" style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:13,marginBottom:10}}>Status</div>
-                      <div style={{height:90}}><ResponsiveContainer><PieChart><Pie data={statusChart} dataKey="value" cx="50%" cy="50%" outerRadius={38} paddingAngle={4} strokeWidth={0}>{statusChart.map((e,i)=><Cell key={i} fill={e.fill}/>)}</Pie><Tooltip content={<CT/>}/></PieChart></ResponsiveContainer></div>
-                      <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>{statusChart.map(d=><div key={d.name} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:d.fill}}/><span style={{fontSize:10,fontWeight:600,color:"var(--t2)"}}>{d.name}</span></div>)}</div>
+
+                    <div className="bg-[#14141F] border border-white/[0.07] rounded-2xl p-5">
+                      <div className="font-bold text-sm mb-2.5">Status</div>
+                      <div className="h-24">
+                        <ResponsiveContainer>
+                          <PieChart>
+                            <Pie data={statusChart} dataKey="value" cx="50%" cy="50%" outerRadius={36} paddingAngle={4} strokeWidth={0}>
+                              {statusChart.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                            </Pie>
+                            <Tooltip content={<CT />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex flex-wrap gap-2.5 justify-center mt-1">
+                        {statusChart.map((d) => (
+                          <div key={d.name} className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: d.fill }} />
+                            <span className="text-[10px] font-semibold text-[#9090B8]">{d.name}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Recent signups table */}
-                <div className="card fu" style={{animationDelay:"420ms"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                    <div style={{fontWeight:700,fontSize:14}}>Recent Registrations</div>
-                    <button onClick={()=>setTab("Users")} style={{fontSize:12,fontWeight:700,color:"var(--vl)",background:"none",border:"none",cursor:"pointer"}}>View all →</button>
+                {/* Recent signups */}
+                <div className="animate-fade-up bg-[#14141F] border border-white/[0.07] rounded-2xl p-5 sm:p-6">
+                  <div className="flex items-center justify-between mb-3.5">
+                    <div className="font-bold text-sm">Recent Registrations</div>
+                    <button onClick={() => setTab("Users")} className="inline-flex items-center gap-1 text-xs font-bold text-violet-400 hover:text-violet-300">
+                      View all <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <div style={{overflowX:"auto"}}>
-                    <table className="dt">
-                      <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Joined</th><th>Status</th><th>Risk</th></tr></thead>
+                  <div className="overflow-x-auto -mx-5 sm:-mx-6 px-5 sm:px-6">
+                    <table className="w-full text-[13px] min-w-[640px]">
+                      <thead>
+                        <tr>
+                          {["User", "Email", "Plan", "Joined", "Status", "Risk"].map((h) => (
+                            <th key={h} className="text-left px-3 py-2.5 text-[10px] font-bold text-[#505075] uppercase tracking-wider border-b border-white/[0.07]">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
                       <tbody>
-                        {users.slice(0,8).map(u=>{
-                          const flags=isSuspicious(u);
-                          return(
-                            <tr key={u._id} className={flags.length>0?"ban-row":""} onClick={()=>setSelUser(u)} style={{cursor:"pointer"}}>
-                              <td>
-                                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                  {onlineUsers.includes(u._id)&&<div className="online-dot"/>}
-                                  <div style={{width:30,height:30,borderRadius:"50%",background:u.avatarUrl?`url(${u.avatarUrl}) center/cover`:"linear-gradient(135deg,var(--v),var(--c))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",flexShrink:0,backgroundSize:"cover"}}>
-                                    {!u.avatarUrl&&(u.name?.charAt(0)||"?")}
-                                  </div>
-                                  <span style={{color:"var(--t1)",fontWeight:600}}>{u.name||"—"}</span>
+                        {users.slice(0, 8).map((u) => {
+                          const flags = isSuspicious(u);
+                          return (
+                            <tr
+                              key={u._id}
+                              onClick={() => setSelUser(u)}
+                              className={`cursor-pointer hover:bg-white/[0.02] border-b border-white/[0.04] ${flags.length > 0 ? "bg-rose-500/[0.04]" : ""}`}
+                            >
+                              <td className="px-3 py-2.5">
+                                <div className="flex items-center gap-2">
+                                  {onlineUsers.includes(u._id) && (
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10B981]" />
+                                  )}
+                                  <Avatar user={u} size={28} />
+                                  <span className="text-white font-semibold">{u.name || "—"}</span>
                                 </div>
                               </td>
-                              <td style={{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.email}</td>
-                              <td><span className="badge" style={{background:u.plan==="pro"?"rgba(124,58,237,.15)":"rgba(255,255,255,.06)",color:u.plan==="pro"?"#C4B5FD":"var(--t3)"}}>{u.plan||"free"}</span></td>
-                              <td>{fmtDate(u.createdAt)}</td>
-                              <td><span className="badge" style={{background:u.status==="active"?"rgba(16,185,129,.15)":"rgba(244,63,94,.15)",color:u.status==="active"?"#6EE7B7":"#FCA5A5"}}>{u.status||"active"}</span></td>
-                              <td>{flags.length>0?<span className="badge" style={{background:"rgba(244,63,94,.15)",color:"#FCA5A5",cursor:"pointer"}} onClick={e=>{e.stopPropagation();autoBan(u);}}>🚨 Ban</span>:<span className="badge" style={{background:"rgba(16,185,129,.1)",color:"#6EE7B7"}}>✓ Clean</span>}</td>
+                              <td className="px-3 py-2.5 text-[#9090B8] max-w-[160px] truncate">{u.email}</td>
+                              <td className="px-3 py-2.5"><Badge tone={u.plan === "pro" ? "violet" : "neutral"}>{u.plan || "free"}</Badge></td>
+                              <td className="px-3 py-2.5 text-[#9090B8] whitespace-nowrap">{fmtDate(u.createdAt)}</td>
+                              <td className="px-3 py-2.5"><Badge tone={u.status === "active" ? "emerald" : "rose"}>{u.status || "active"}</Badge></td>
+                              <td className="px-3 py-2.5">
+                                {flags.length > 0 ? (
+                                  <SmallBtn tone="danger" onClick={(e) => { e.stopPropagation(); autoBan(u); }}>
+                                    <Ban className="w-3 h-3" /> Ban
+                                  </SmallBtn>
+                                ) : (
+                                  <Badge tone="emerald"><Check className="w-3 h-3" /> Clean</Badge>
+                                )}
+                              </td>
                             </tr>
                           );
                         })}
-                        {users.length===0&&<tr><td colSpan={6} style={{textAlign:"center",padding:"20px 0",color:"var(--t3)"}}>No users yet</td></tr>}
+                        {users.length === 0 && (
+                          <tr><td colSpan={6} className="text-center py-5 text-[#505075]">No users yet</td></tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -394,33 +574,34 @@ export default function AdminDashboard() {
             )}
 
             {/* ═══ LIVE USERS ═══ */}
-            {tab==="Live Users"&&(
-              <div className="fu">
-                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
-                  <div className="live-badge"><div className="live-dot"/>{onlineUsers.length} users online right now</div>
-                  <span style={{fontSize:12,color:"var(--t3)",fontWeight:500}}>Updates every 30s · Simulated via polling (add WebSockets for true real-time)</span>
+            {tab === "Live Users" && (
+              <div className="animate-fade-up">
+                <div className="flex flex-wrap items-center gap-3 mb-5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/25 text-[10px] font-bold text-rose-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                    {onlineUsers.length} users online right now
+                  </span>
+                  <span className="text-xs text-[#505075] font-medium">Updates every 30s</span>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
-                  {users.filter(u=>onlineUsers.includes(u._id)).map(u=>(
-                    <div key={u._id} className="card" style={{borderColor:"rgba(16,185,129,.2)"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:12}}>
-                        <div style={{position:"relative"}}>
-                          <div style={{width:44,height:44,borderRadius:"50%",background:u.avatarUrl?`url(${u.avatarUrl}) center/cover`:"linear-gradient(135deg,var(--v),var(--c))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:"#fff",backgroundSize:"cover"}}>{!u.avatarUrl&&(u.name?.charAt(0)||"?")}</div>
-                          <div style={{position:"absolute",bottom:1,right:1,width:11,height:11,borderRadius:"50%",background:"var(--e)",border:"2px solid var(--d1)"}}/>
-                        </div>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontWeight:700,fontSize:14,color:"var(--t1)"}}>{u.name||"—"}</div>
-                          <div style={{fontSize:11,color:"var(--t3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.email}</div>
-                          <div style={{fontSize:10,color:"var(--e)",fontWeight:700,marginTop:2}}>● Active now</div>
-                        </div>
-                        <span className="badge" style={{background:u.plan==="pro"?"rgba(124,58,237,.15)":"rgba(255,255,255,.06)",color:u.plan==="pro"?"#C4B5FD":"var(--t3)"}}>{u.plan||"free"}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                  {users.filter((u) => onlineUsers.includes(u._id)).map((u) => (
+                    <div key={u._id} className="bg-[#14141F] border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="relative shrink-0">
+                        <Avatar user={u} size={44} />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#080810]" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm truncate">{u.name || "—"}</div>
+                        <div className="text-[11px] text-[#505075] truncate">{u.email}</div>
+                        <div className="text-[10px] text-emerald-400 font-bold mt-0.5">● Active now</div>
+                      </div>
+                      <Badge tone={u.plan === "pro" ? "violet" : "neutral"}>{u.plan || "free"}</Badge>
                     </div>
                   ))}
-                  {onlineUsers.length===0&&(
-                    <div style={{gridColumn:"1/-1",textAlign:"center",padding:"40px 0",color:"var(--t3)"}}>
-                      <div style={{fontSize:40,marginBottom:10}}>😴</div>
-                      <div style={{fontSize:14,fontWeight:600}}>No users online right now</div>
+                  {onlineUsers.length === 0 && (
+                    <div className="col-span-full text-center py-12">
+                      <Wifi className="w-12 h-12 text-[#505075] mx-auto mb-3" />
+                      <div className="text-sm font-semibold text-[#9090B8]">No users online right now</div>
                     </div>
                   )}
                 </div>
@@ -428,66 +609,125 @@ export default function AdminDashboard() {
             )}
 
             {/* ═══ USERS ═══ */}
-            {tab==="Users"&&(
-              <div className="card fu">
-                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:18,flexWrap:"wrap"}}>
-                  <div style={{position:"relative",flex:1,minWidth:200}}>
-                    <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:13,color:"var(--t3)"}}>🔍</span>
-                    <input className="si" style={{width:"100%",paddingLeft:34}} placeholder="Search by name or email…" value={uSearch} onChange={e=>setUSearch(e.target.value)}/>
+            {tab === "Users" && (
+              <div className="animate-fade-up bg-[#14141F] border border-white/[0.07] rounded-2xl p-4 sm:p-6">
+                <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center mb-5">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-[#505075] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      className="w-full pl-9 pr-3 py-2.5 bg-[#1A1A28] border border-white/[0.07] rounded-xl text-sm font-medium text-white placeholder:text-[#505075] outline-none focus:border-violet-500 transition"
+                      placeholder="Search by name or email…"
+                      value={uSearch}
+                      onChange={(e) => setUSearch(e.target.value)}
+                    />
                   </div>
-                  <div style={{display:"flex",gap:4,background:"var(--d4)",borderRadius:10,padding:4,flexWrap:"wrap"}}>
-                    {["all","active","suspended","suspicious","online"].map(f=>(
-                      <button key={f} className={`tb ${uFilter===f?"a":""}`} onClick={()=>{setUFilter(f);setUPage(1);}} style={{textTransform:"capitalize",fontSize:11,padding:"5px 12px"}}>
-                        {f}{f==="suspicious"&&suspCount>0&&<span style={{marginLeft:4,background:"var(--r)",color:"#fff",fontSize:9,padding:"1px 5px",borderRadius:6}}>{suspCount}</span>}
-                        {f==="online"&&<span style={{marginLeft:4,background:"var(--e)",color:"#fff",fontSize:9,padding:"1px 5px",borderRadius:6}}>{onlineUsers.length}</span>}
+                  <div className="flex gap-1 bg-[#1A1A28] rounded-xl p-1 overflow-x-auto">
+                    {["all", "active", "suspended", "suspicious", "online"].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => { setUFilter(f); setUPage(1); }}
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold capitalize whitespace-nowrap transition ${
+                          uFilter === f ? "bg-violet-600 text-white" : "text-[#505075] hover:text-white"
+                        }`}
+                      >
+                        {f}
+                        {f === "suspicious" && suspCount > 0 && (
+                          <span className="ml-0.5 bg-rose-500 text-white text-[9px] px-1.5 rounded">{suspCount}</span>
+                        )}
+                        {f === "online" && (
+                          <span className="ml-0.5 bg-emerald-500 text-white text-[9px] px-1.5 rounded">{onlineUsers.length}</span>
+                        )}
                       </button>
                     ))}
                   </div>
-                  <div style={{fontSize:12,color:"var(--t3)",fontWeight:600,whiteSpace:"nowrap"}}>{visibleUsers.length} user{visibleUsers.length!==1?"s":""}</div>
+                  <div className="text-xs text-[#505075] font-semibold whitespace-nowrap text-center lg:text-left">
+                    {visibleUsers.length} user{visibleUsers.length !== 1 ? "s" : ""}
+                  </div>
                 </div>
-                <div style={{overflowX:"auto"}}>
-                  <table className="dt">
-                    <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Tasks</th><th>Joined</th><th>Status</th><th>Risk</th><th>Actions</th></tr></thead>
+
+                <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
+                  <table className="w-full text-[13px] min-w-[800px]">
+                    <thead>
+                      <tr>
+                        {["User", "Email", "Plan", "Tasks", "Joined", "Status", "Risk", "Actions"].map((h) => (
+                          <th key={h} className="text-left px-3 py-2.5 text-[10px] font-bold text-[#505075] uppercase tracking-wider border-b border-white/[0.07]">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
                     <tbody>
-                      {pagedUsers.map(u=>{
-                        const flags=isSuspicious(u);
-                        const isOnline=onlineUsers.includes(u._id);
-                        return(
-                          <tr key={u._id} className={`${flags.length>0?"ban-row":""}${isOnline?" online":""}`} onClick={()=>setSelUser(u)}>
-                            <td>
-                              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                {isOnline&&<div className="online-dot"/>}
-                                <div style={{width:30,height:30,borderRadius:"50%",background:"linear-gradient(135deg,var(--v),var(--c))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",flexShrink:0}}>{u.name?.charAt(0)||"?"}</div>
-                                <span style={{color:"var(--t1)",fontWeight:600}}>{u.name||"—"}</span>
+                      {pagedUsers.map((u) => {
+                        const flags = isSuspicious(u);
+                        const isOnline = onlineUsers.includes(u._id);
+                        return (
+                          <tr
+                            key={u._id}
+                            onClick={() => setSelUser(u)}
+                            className={`cursor-pointer hover:bg-white/[0.02] border-b border-white/[0.04] ${
+                              flags.length > 0 ? "bg-rose-500/[0.04]" : isOnline ? "bg-emerald-500/[0.03]" : ""
+                            }`}
+                          >
+                            <td className="px-3 py-2.5">
+                              <div className="flex items-center gap-2">
+                                {isOnline && (
+                                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10B981]" />
+                                )}
+                                <Avatar user={u} size={28} />
+                                <span className="text-white font-semibold">{u.name || "—"}</span>
                               </div>
                             </td>
-                            <td style={{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.email}</td>
-                            <td><span className="badge" style={{background:u.plan==="pro"?"rgba(124,58,237,.15)":"rgba(255,255,255,.06)",color:u.plan==="pro"?"#C4B5FD":"var(--t3)"}}>{u.plan||"free"}</span></td>
-                            <td style={{color:"var(--t1)",fontWeight:600}}>{u.taskCount||0}</td>
-                            <td style={{whiteSpace:"nowrap"}}>{fmtDate(u.createdAt)}</td>
-                            <td><span className="badge" style={{background:u.status==="active"?"rgba(16,185,129,.15)":"rgba(244,63,94,.15)",color:u.status==="active"?"#6EE7B7":"#FCA5A5"}}>{u.status||"active"}</span></td>
-                            <td>{flags.length>0?<span title={flags.join(", ")} className="badge" style={{background:"rgba(244,63,94,.12)",color:"#FCA5A5",cursor:"help"}}>🚨 {flags.length} flag{flags.length>1?"s":""}</span>:<span className="badge" style={{background:"rgba(16,185,129,.1)",color:"#6EE7B7"}}>✓</span>}</td>
-                            <td onClick={e=>e.stopPropagation()}>
-                              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                                {u.status!=="suspended"
-                                  ?<button className="bs" onClick={()=>suspendUser(u._id)} style={{background:"rgba(244,63,94,.1)",color:"#FCA5A5"}}>Suspend</button>
-                                  :<button className="bs" onClick={()=>activateUser(u._id)} style={{background:"rgba(16,185,129,.1)",color:"#6EE7B7"}}>Activate</button>}
-                                {u.plan!=="pro"&&<button className="bs" onClick={()=>upgradeUser(u._id)} style={{background:"rgba(124,58,237,.1)",color:"#C4B5FD"}}>↑ Pro</button>}
-                                {flags.length>0&&<button className="bs" onClick={()=>autoBan(u)} style={{background:"rgba(244,63,94,.15)",color:"#FCA5A5"}}>🚫 Ban</button>}
-                                <button className="bs" onClick={()=>deleteUser(u._id,u.name)} style={{background:"rgba(244,63,94,.08)",color:"#F87171"}}>🗑</button>
+                            <td className="px-3 py-2.5 text-[#9090B8] max-w-[160px] truncate">{u.email}</td>
+                            <td className="px-3 py-2.5"><Badge tone={u.plan === "pro" ? "violet" : "neutral"}>{u.plan || "free"}</Badge></td>
+                            <td className="px-3 py-2.5 text-white font-semibold">{u.taskCount || 0}</td>
+                            <td className="px-3 py-2.5 text-[#9090B8] whitespace-nowrap">{fmtDate(u.createdAt)}</td>
+                            <td className="px-3 py-2.5"><Badge tone={u.status === "active" ? "emerald" : "rose"}>{u.status || "active"}</Badge></td>
+                            <td className="px-3 py-2.5">
+                              {flags.length > 0 ? (
+                                <Badge tone="rose" title={flags.join(", ")}>
+                                  <AlertTriangle className="w-3 h-3" /> {flags.length}
+                                </Badge>
+                              ) : (
+                                <Badge tone="emerald"><Check className="w-3 h-3" /></Badge>
+                              )}
+                            </td>
+                            <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex gap-1 flex-wrap">
+                                {u.status !== "suspended" ? (
+                                  <SmallBtn tone="rose" onClick={() => suspendUser(u._id)}>Suspend</SmallBtn>
+                                ) : (
+                                  <SmallBtn tone="emerald" onClick={() => activateUser(u._id)}>Activate</SmallBtn>
+                                )}
+                                {u.plan !== "pro" && (
+                                  <SmallBtn tone="violet" onClick={() => upgradeUser(u._id)}>
+                                    <ArrowUp className="w-3 h-3" /> Pro
+                                  </SmallBtn>
+                                )}
+                                {flags.length > 0 && (
+                                  <SmallBtn tone="danger" onClick={() => autoBan(u)}>
+                                    <Ban className="w-3 h-3" />
+                                  </SmallBtn>
+                                )}
+                                <SmallBtn tone="danger" onClick={() => deleteUser(u._id, u.name)}>
+                                  <Trash2 className="w-3 h-3" />
+                                </SmallBtn>
                               </div>
                             </td>
                           </tr>
                         );
                       })}
-                      {pagedUsers.length===0&&<tr><td colSpan={8} style={{textAlign:"center",padding:"28px 0",color:"var(--t3)"}}>No users found</td></tr>}
+                      {pagedUsers.length === 0 && (
+                        <tr><td colSpan={8} className="text-center py-7 text-[#505075]">No users found</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
-                {pagedUsers.length<visibleUsers.length&&(
-                  <div style={{textAlign:"center",marginTop:16}}>
-                    <button onClick={()=>setUPage(p=>p+1)} style={{padding:"8px 20px",background:"rgba(124,58,237,.1)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,color:"#C4B5FD",fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:12,cursor:"pointer"}}>
-                      Load more ({visibleUsers.length-pagedUsers.length} more)
+
+                {pagedUsers.length < visibleUsers.length && (
+                  <div className="text-center mt-4">
+                    <button
+                      onClick={() => setUPage((p) => p + 1)}
+                      className="px-5 py-2 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-300 font-bold text-xs hover:bg-violet-500/20 transition"
+                    >
+                      Load more ({visibleUsers.length - pagedUsers.length} more)
                     </button>
                   </div>
                 )}
@@ -495,43 +735,57 @@ export default function AdminDashboard() {
             )}
 
             {/* ═══ AI INSIGHTS ═══ */}
-            {tab==="AI Insights"&&(
-              <div className="fu">
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:12}}>
+            {tab === "AI Insights" && (
+              <div className="animate-fade-up">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
                   <div>
-                    <h2 style={{fontWeight:800,fontSize:18,marginBottom:4}}>🧠 AI Platform Intelligence</h2>
-                    <p style={{fontSize:13,color:"var(--t3)",fontWeight:500}}>AI-powered analysis of your platform health and growth opportunities</p>
+                    <h2 className="font-extrabold text-lg mb-1 flex items-center gap-2">
+                      <Brain className="w-5 h-5 text-violet-400" /> AI Platform Intelligence
+                    </h2>
+                    <p className="text-[13px] text-[#505075] font-medium">AI-powered analysis of your platform health and growth opportunities</p>
                   </div>
-                  <button onClick={generateAiInsights} disabled={aiLoading} style={{padding:"10px 20px",background:"linear-gradient(135deg,var(--v),var(--c))",border:"none",borderRadius:11,color:"#fff",fontFamily:"Montserrat,sans-serif",fontSize:13,fontWeight:700,cursor:aiLoading?"not-allowed":"pointer",opacity:aiLoading?.6:1}}>
-                    {aiLoading?"Analysing…":"↺ Refresh Insights"}
+                  <button
+                    onClick={generateAiInsights}
+                    disabled={aiLoading}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-br from-violet-600 to-cyan-500 rounded-xl text-white text-[13px] font-bold disabled:opacity-60 disabled:cursor-not-allowed hover:scale-[1.02] transition-transform"
+                  >
+                    {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    {aiLoading ? "Analysing…" : "Refresh Insights"}
                   </button>
                 </div>
-                {/* Quick stats for AI */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                   {[
-                    {label:"Conversion Rate",    val:`${Math.round(((ds.proUsers||0)/(Math.max(ds.totalUsers,1)))*100)}%`,   color:"var(--a)"},
-                    {label:"30-day Retention",   val:`${Math.round(100-(ds.churnRate||0))}%`,                                color:"var(--e)"},
-                    {label:"Engagement Rate",    val:`${Math.round(((ds.activeUsers||0)/Math.max(ds.totalUsers,1))*100)}%`,  color:"var(--c)"},
-                    {label:"Monthly Growth",     val:`+${users.filter(u=>new Date(u.createdAt)>new Date(Date.now()-2592000000)).length}`,color:"var(--vl)"},
-                  ].map((k,i)=>(
-                    <div key={k.label} className="kpi fu" style={{animationDelay:`${i*60}ms`,textAlign:"center",padding:"20px"}}>
-                      <div style={{fontSize:26,fontWeight:900,color:k.color,letterSpacing:-1}}>{k.val}</div>
-                      <div style={{fontSize:10,fontWeight:700,color:"var(--t3)",marginTop:6,textTransform:"uppercase",letterSpacing:.7}}>{k.label}</div>
+                    { label: "Conversion Rate", val: `${Math.round(((ds.proUsers || 0) / Math.max(ds.totalUsers, 1)) * 100)}%`, color: "text-amber-400" },
+                    { label: "30-day Retention", val: `${Math.round(100 - (ds.churnRate || 0))}%`, color: "text-emerald-400" },
+                    { label: "Engagement Rate", val: `${Math.round(((ds.activeUsers || 0) / Math.max(ds.totalUsers, 1)) * 100)}%`, color: "text-cyan-400" },
+                    { label: "Monthly Growth", val: `+${users.filter((u) => new Date(u.createdAt) > new Date(Date.now() - 2592000000)).length}`, color: "text-violet-400" },
+                  ].map((k, i) => (
+                    <div key={k.label} className="animate-fade-up bg-[#14141F] border border-white/[0.07] rounded-2xl p-5 text-center" style={{ animationDelay: `${i * 60}ms` }}>
+                      <div className={`text-2xl sm:text-[26px] font-black tracking-tight ${k.color}`}>{k.val}</div>
+                      <div className="text-[10px] font-bold text-[#505075] mt-2 uppercase tracking-wider">{k.label}</div>
                     </div>
                   ))}
                 </div>
-                {aiLoading?(
-                  <div style={{textAlign:"center",padding:"40px 0"}}>
-                    <div style={{width:48,height:48,borderRadius:"50%",border:"3px solid rgba(255,255,255,.07)",borderTopColor:"var(--vl)",animation:"spin .8s linear infinite",margin:"0 auto 16px"}}/>
-                    <div style={{fontSize:13,color:"var(--t3)"}}>Analysing platform data…</div>
+
+                {aiLoading ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-12 h-12 text-violet-500 animate-spin mx-auto mb-4" />
+                    <div className="text-sm text-[#505075]">Analysing platform data…</div>
                   </div>
-                ):(
-                  <div>
-                    {aiInsights.map((insight,i)=>(
-                      <div key={i} className="ai-insight fu" style={{animationDelay:`${i*80}ms`}}>
-                        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-                          <div style={{width:32,height:32,borderRadius:"50%",background:"rgba(124,58,237,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🤖</div>
-                          <p style={{fontSize:14,color:"var(--t2)",lineHeight:1.75,fontWeight:500}}>{insight}</p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {aiInsights.map((insight, i) => (
+                      <div
+                        key={i}
+                        className="animate-fade-up bg-gradient-to-br from-violet-500/[0.08] to-cyan-500/[0.06] border border-violet-500/20 rounded-2xl p-4 sm:p-5 hover:border-violet-500/35 hover:translate-x-1 transition-all"
+                        style={{ animationDelay: `${i * 80}ms` }}
+                      >
+                        <div className="flex gap-3 items-start">
+                          <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
+                            <Brain className="w-4 h-4 text-violet-300" />
+                          </div>
+                          <p className="text-sm text-[#9090B8] leading-relaxed font-medium">{insight}</p>
                         </div>
                       </div>
                     ))}
@@ -541,122 +795,191 @@ export default function AdminDashboard() {
             )}
 
             {/* ═══ ALERTS ═══ */}
-            {tab==="Alerts"&&(
-              <div className="fu">
-                <div style={{marginBottom:20}}>
-                  <h2 style={{fontWeight:800,fontSize:18,marginBottom:4}}>⚡ Platform Alerts</h2>
-                  <p style={{fontSize:13,color:"var(--t3)",fontWeight:500}}>Real-time security and health alerts for your platform</p>
+            {tab === "Alerts" && (
+              <div className="animate-fade-up">
+                <div className="mb-5">
+                  <h2 className="font-extrabold text-lg mb-1 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-400" /> Platform Alerts
+                  </h2>
+                  <p className="text-[13px] text-[#505075] font-medium">Real-time security and health alerts for your platform</p>
                 </div>
-                {/* Suspicious users alert */}
-                {suspCount>0&&(
-                  <div style={{background:"rgba(244,63,94,.08)",border:"1px solid rgba(244,63,94,.25)",borderRadius:16,padding:"18px 20px",marginBottom:16}}>
-                    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-                      <span style={{fontSize:24}}>🚨</span>
+
+                {suspCount > 0 && (
+                  <div className="bg-rose-500/[0.08] border border-rose-500/25 rounded-2xl p-5 mb-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <AlertTriangle className="w-6 h-6 text-rose-400" />
                       <div>
-                        <div style={{fontWeight:800,fontSize:15,color:"#F43F5E"}}>Suspicious Activity Detected</div>
-                        <div style={{fontSize:12,color:"var(--t2)",marginTop:2}}>{suspCount} account{suspCount>1?"s":""} flagged by auto-detection</div>
+                        <div className="font-extrabold text-base text-rose-500">Suspicious Activity Detected</div>
+                        <div className="text-xs text-[#9090B8] mt-0.5">{suspCount} account{suspCount > 1 ? "s" : ""} flagged by auto-detection</div>
                       </div>
                     </div>
-                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                      {users.filter(u=>isSuspicious(u).length>0).slice(0,5).map(u=>(
-                        <div key={u._id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(244,63,94,.06)",borderRadius:10}}>
-                          <div>
-                            <span style={{fontWeight:700,fontSize:13,color:"var(--t1)"}}>{u.name||"Unknown"}</span>
-                            <span style={{fontSize:11,color:"var(--t3)",marginLeft:8}}>{u.email}</span>
-                            <div style={{fontSize:11,color:"#FCA5A5",marginTop:3}}>{isSuspicious(u).join(" · ")}</div>
+                    <div className="flex flex-col gap-2">
+                      {users.filter((u) => isSuspicious(u).length > 0).slice(0, 5).map((u) => (
+                        <div key={u._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-rose-500/[0.06] rounded-xl">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-baseline gap-2">
+                              <span className="font-bold text-[13px] text-white">{u.name || "Unknown"}</span>
+                              <span className="text-[11px] text-[#505075] truncate">{u.email}</span>
+                            </div>
+                            <div className="text-[11px] text-rose-300 mt-1">{isSuspicious(u).join(" · ")}</div>
                           </div>
-                          <div style={{display:"flex",gap:8}}>
-                            <button className="bs" onClick={()=>autoBan(u)} style={{background:"rgba(244,63,94,.2)",color:"#FCA5A5"}}>🚫 Auto-ban</button>
-                            <button className="bs" onClick={()=>setSelUser(u)} style={{background:"rgba(255,255,255,.06)",color:"var(--t2)"}}>View</button>
+                          <div className="flex gap-2 shrink-0">
+                            <SmallBtn tone="danger" onClick={() => autoBan(u)}><Ban className="w-3 h-3" /> Auto-ban</SmallBtn>
+                            <SmallBtn onClick={() => setSelUser(u)}><Eye className="w-3 h-3" /> View</SmallBtn>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-                {alerts.map((a,i)=>(
-                  <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 18px",background:"var(--d4)",border:a.severity==="high"?"1px solid rgba(244,63,94,.2)":a.severity==="medium"?"1px solid rgba(245,158,11,.15)":"1px solid var(--gb)",borderRadius:14,marginBottom:10}}>
-                    <span style={{fontSize:22}}>{a.severity==="high"?"🔴":a.severity==="medium"?"🟡":"🟢"}</span>
-                    <div style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:13,marginBottom:2}}>{a.title}</div>
-                      <div style={{fontSize:12,color:"var(--t2)",fontWeight:500}}>{a.message}</div>
+
+                {alerts.map((a, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-3.5 p-4 bg-[#1A1A28] rounded-2xl mb-2.5 border ${
+                      a.severity === "high" ? "border-rose-500/20" : a.severity === "medium" ? "border-amber-500/15" : "border-white/[0.07]"
+                    }`}
+                  >
+                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                      a.severity === "high" ? "bg-rose-500" : a.severity === "medium" ? "bg-amber-500" : "bg-emerald-500"
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-[13px] mb-0.5 truncate">{a.title}</div>
+                      <div className="text-xs text-[#9090B8] font-medium">{a.message}</div>
                     </div>
-                    <span style={{fontSize:11,color:"var(--t3)",fontWeight:600,whiteSpace:"nowrap"}}>{a.time}</span>
+                    <span className="text-[11px] text-[#505075] font-semibold whitespace-nowrap">{a.time}</span>
                   </div>
                 ))}
-                {alerts.length===0&&suspCount===0&&(
-                  <div style={{textAlign:"center",padding:"40px 0"}}>
-                    <div style={{fontSize:48,marginBottom:12}}>✅</div>
-                    <div style={{fontSize:16,fontWeight:700,marginBottom:6}}>All Clear</div>
-                    <div style={{fontSize:13,color:"var(--t3)"}}>No active alerts. Platform is healthy.</div>
+
+                {alerts.length === 0 && suspCount === 0 && (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
+                      <Check className="w-8 h-8 text-emerald-400" />
+                    </div>
+                    <div className="text-base font-bold mb-1.5">All Clear</div>
+                    <div className="text-[13px] text-[#505075]">No active alerts. Platform is healthy.</div>
                   </div>
                 )}
               </div>
             )}
 
             {/* ═══ BROADCAST ═══ */}
-            {tab==="Broadcast"&&(
-              <div style={{maxWidth:640}} className="fu">
-                <h2 style={{fontWeight:800,fontSize:18,marginBottom:4}}>📢 Broadcast Notification</h2>
-                <p style={{fontSize:13,color:"var(--t3)",fontWeight:500,marginBottom:24}}>Send a notification to one or all platform users</p>
-                {bSent&&<div style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.25)",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:13,fontWeight:600,color:"#6EE7B7"}}>✓ Broadcast sent successfully!</div>}
-                <div className="card">
-                  {[{k:"title",l:"Title *",p:"e.g. New feature announcement"},{k:"message",l:"Message *",p:"Write your message here…",ta:true}].map(({k,l,p,ta})=>(
-                    <div key={k} style={{marginBottom:14}}>
-                      <label style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:.8,display:"block",marginBottom:6}}>{l}</label>
-                      {ta
-                        ?<textarea className="si" style={{width:"100%",minHeight:100,resize:"vertical",fontFamily:"Montserrat,sans-serif"}} placeholder={p} value={broadcast[k]} onChange={e=>setBroadcast(p=>({...p,[k]:e.target.value}))}/>
-                        :<input className="si" style={{width:"100%"}} placeholder={p} value={broadcast[k]} onChange={e=>setBroadcast(p=>({...p,[k]:e.target.value}))}/>}
+            {tab === "Broadcast" && (
+              <div className="animate-fade-up max-w-2xl">
+                <h2 className="font-extrabold text-lg mb-1 flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 text-emerald-400" /> Broadcast Notification
+                </h2>
+                <p className="text-[13px] text-[#505075] font-medium mb-6">Send a notification to all platform users</p>
+
+                {bSent && (
+                  <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 rounded-xl px-4 py-3 mb-4 text-sm font-semibold">
+                    <Check className="w-4 h-4" /> Broadcast sent successfully!
+                  </div>
+                )}
+
+                <div className="bg-[#14141F] border border-white/[0.07] rounded-2xl p-5 sm:p-6">
+                  {[
+                    { k: "title", l: "Title *", p: "e.g. New feature announcement" },
+                    { k: "message", l: "Message *", p: "Write your message here…", ta: true },
+                  ].map(({ k, l, p, ta }) => (
+                    <div key={k} className="mb-4">
+                      <label className="block text-[11px] font-bold text-[#505075] uppercase tracking-wider mb-2">{l}</label>
+                      {ta ? (
+                        <textarea
+                          className="w-full px-3.5 py-2.5 bg-[#1A1A28] border border-white/[0.07] rounded-xl text-sm font-medium text-white placeholder:text-[#505075] outline-none focus:border-violet-500 transition min-h-[100px] resize-y font-montserrat"
+                          placeholder={p}
+                          value={broadcast[k]}
+                          onChange={(e) => setBroadcast((pr) => ({ ...pr, [k]: e.target.value }))}
+                        />
+                      ) : (
+                        <input
+                          className="w-full px-3.5 py-2.5 bg-[#1A1A28] border border-white/[0.07] rounded-xl text-sm font-medium text-white placeholder:text-[#505075] outline-none focus:border-violet-500 transition"
+                          placeholder={p}
+                          value={broadcast[k]}
+                          onChange={(e) => setBroadcast((pr) => ({ ...pr, [k]: e.target.value }))}
+                        />
+                      )}
                     </div>
                   ))}
-                  <div style={{marginBottom:14}}>
-                    <label style={{fontSize:11,fontWeight:700,color:"var(--t3)",textTransform:"uppercase",letterSpacing:.8,display:"block",marginBottom:6}}>Type</label>
-                    <select className="si" style={{width:"100%",appearance:"none",cursor:"pointer"}} value={broadcast.type} onChange={e=>setBroadcast(p=>({...p,type:e.target.value}))}>
-                      {["system","ai","finance","task","habit","report"].map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
+
+                  <div className="mb-4">
+                    <label className="block text-[11px] font-bold text-[#505075] uppercase tracking-wider mb-2">Type</label>
+                    <select
+                      className="w-full px-3.5 py-2.5 bg-[#1A1A28] border border-white/[0.07] rounded-xl text-sm font-medium text-white outline-none focus:border-violet-500 transition cursor-pointer"
+                      value={broadcast.type}
+                      onChange={(e) => setBroadcast((p) => ({ ...p, type: e.target.value }))}
+                    >
+                      {["system", "ai", "finance", "task", "habit", "report"].map((t) => (
+                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                      ))}
                     </select>
                   </div>
-                  <div style={{background:"rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"10px 14px",marginBottom:18,fontSize:12,color:"#FCD34D",fontWeight:600}}>
-                    ⚠ This will send to all {ds.activeUsers} active users. Make sure your message is accurate.
+
+                  <div className="flex gap-2 items-start bg-amber-500/[0.07] border border-amber-500/20 rounded-xl px-3.5 py-2.5 mb-5 text-xs text-amber-300 font-semibold">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>This will send to all {ds.activeUsers} active users. Make sure your message is accurate.</span>
                   </div>
-                  <button onClick={sendBroadcast} disabled={bSending||!broadcast.title||!broadcast.message}
-                    style={{width:"100%",padding:"12px",background:broadcast.title&&broadcast.message?"linear-gradient(135deg,var(--v),var(--c))":"var(--d5)",border:"none",borderRadius:11,color:broadcast.title&&broadcast.message?"#fff":"var(--t3)",fontFamily:"Montserrat,sans-serif",fontSize:14,fontWeight:700,cursor:broadcast.title&&broadcast.message?"pointer":"not-allowed"}}>
-                    {bSending?"Sending…":`📢 Send to All ${ds.activeUsers} Active Users`}
+
+                  <button
+                    onClick={sendBroadcast}
+                    disabled={bSending || !broadcast.title || !broadcast.message}
+                    className={`w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition ${
+                      broadcast.title && broadcast.message && !bSending
+                        ? "bg-gradient-to-br from-violet-600 to-cyan-500 text-white hover:scale-[1.01]"
+                        : "bg-[#222235] text-[#505075] cursor-not-allowed"
+                    }`}
+                  >
+                    {bSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
+                    {bSending ? "Sending…" : `Send to All ${ds.activeUsers} Active Users`}
                   </button>
                 </div>
               </div>
             )}
 
             {/* ═══ SYSTEM ═══ */}
-            {tab==="System"&&(
-              <div className="fu">
-                <h2 style={{fontWeight:800,fontSize:18,marginBottom:20}}>⚙️ System Status</h2>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:24}}>
-                  {[{icon:"🌐",l:"API Service",s:"Operational",c:"var(--e)"},{icon:"🤖",l:"AI Engine",s:"Operational",c:"var(--e)"},{icon:"🗄️",l:"MongoDB Atlas",s:"Operational",c:"var(--e)"},{icon:"🔐",l:"Auth Service",s:"Operational",c:"var(--e)"},{icon:"📧",l:"Email Service",s:"Operational",c:"var(--e)"},{icon:"💾",l:"File Storage",s:"Degraded",c:"var(--a)"},{icon:"📊",l:"Analytics",s:"Operational",c:"var(--e)"},{icon:"🔔",l:"Notifications",s:"Operational",c:"var(--e)"}].map((s,i)=>(
-                    <div key={s.l} className="card fu" style={{animationDelay:`${i*40}ms`,display:"flex",alignItems:"center",gap:14}}>
-                      <span style={{fontSize:26}}>{s.icon}</span>
-                      <div style={{flex:1}}><div style={{fontWeight:700,fontSize:14}}>{s.l}</div><div style={{fontSize:11,color:"var(--t3)",marginTop:2}}>Service status</div></div>
-                      <div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 12px",background:`${s.c}15`,border:`1px solid ${s.c}44`,borderRadius:20}}>
-                        <div style={{width:6,height:6,borderRadius:"50%",background:s.c,animation:"pulse 2.5s infinite"}}/>
-                        <span style={{fontSize:11,fontWeight:700,color:s.c}}>{s.s}</span>
+            {tab === "System" && (
+              <div className="animate-fade-up">
+                <h2 className="font-extrabold text-lg mb-5 flex items-center gap-2">
+                  <Cog className="w-5 h-5 text-cyan-400" /> System Status
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
+                  {SYSTEM_STATUS.map(({ Icon, l, s, ok }, i) => (
+                    <div
+                      key={l}
+                      className="animate-fade-up bg-[#14141F] border border-white/[0.07] rounded-2xl p-4 flex items-center gap-3.5"
+                      style={{ animationDelay: `${i * 40}ms` }}
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${ok ? "bg-emerald-500/15" : "bg-amber-500/15"}`}>
+                        <Icon className={`w-5 h-5 ${ok ? "text-emerald-400" : "text-amber-400"}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm">{l}</div>
+                        <div className="text-[11px] text-[#505075] mt-0.5">Service status</div>
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${ok ? "bg-emerald-500/15 border border-emerald-500/30" : "bg-amber-500/15 border border-amber-500/30"}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${ok ? "bg-emerald-500" : "bg-amber-500"}`} />
+                        <span className={`text-[10px] font-bold ${ok ? "text-emerald-400" : "text-amber-400"}`}>{s}</span>
                       </div>
                     </div>
                   ))}
                 </div>
-                {/* DB info */}
-                <div className="card">
-                  <h3 style={{fontWeight:800,fontSize:14,marginBottom:14}}>Platform Summary</h3>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+
+                <div className="bg-[#14141F] border border-white/[0.07] rounded-2xl p-5 sm:p-6">
+                  <h3 className="font-extrabold text-sm mb-4 flex items-center gap-2">
+                    <Server className="w-4 h-4 text-violet-400" /> Platform Summary
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
-                      {label:"Total Users",    val:ds.totalUsers,   color:"var(--vl)"},
-                      {label:"Active Users",   val:ds.activeUsers,  color:"var(--e)"},
-                      {label:"Pro Users",      val:ds.proUsers||0,  color:"var(--a)"},
-                      {label:"Suspended",      val:users.filter(u=>u.status==="suspended").length, color:"var(--r)"},
-                      {label:"Suspicious",     val:suspCount,       color:suspCount>0?"var(--r)":"var(--e)"},
-                      {label:"Online Now",     val:onlineUsers.length, color:"var(--c)"},
-                    ].map(({label,val,color})=>(
-                      <div key={label} style={{padding:"12px 14px",background:"var(--d4)",borderRadius:12,textAlign:"center"}}>
-                        <div style={{fontSize:22,fontWeight:900,color,letterSpacing:-0.5}}>{val}</div>
-                        <div style={{fontSize:10,fontWeight:700,color:"var(--t3)",marginTop:4,textTransform:"uppercase",letterSpacing:.7}}>{label}</div>
+                      { label: "Total Users", val: ds.totalUsers, color: "text-violet-400" },
+                      { label: "Active Users", val: ds.activeUsers, color: "text-emerald-400" },
+                      { label: "Pro Users", val: ds.proUsers || 0, color: "text-amber-400" },
+                      { label: "Suspended", val: users.filter((u) => u.status === "suspended").length, color: "text-rose-400" },
+                      { label: "Suspicious", val: suspCount, color: suspCount > 0 ? "text-rose-400" : "text-emerald-400" },
+                      { label: "Online Now", val: onlineUsers.length, color: "text-cyan-400" },
+                    ].map(({ label, val, color }) => (
+                      <div key={label} className="px-3 py-3 bg-[#1A1A28] rounded-xl text-center">
+                        <div className={`text-xl sm:text-2xl font-black tracking-tight ${color}`}>{val}</div>
+                        <div className="text-[10px] font-bold text-[#505075] mt-1 uppercase tracking-wider">{label}</div>
                       </div>
                     ))}
                   </div>
@@ -667,47 +990,96 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* User detail modal */}
-      {selUser&&(
-        <div className="modal-o" onClick={e=>e.target===e.currentTarget&&setSelUser(null)}>
-          <div style={{background:"var(--d3)",border:"1px solid var(--gb)",borderRadius:24,padding:28,width:500,maxHeight:"88vh",overflowY:"auto",boxShadow:"0 30px 80px rgba(0,0,0,.65)"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
-              <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <div style={{width:52,height:52,borderRadius:"50%",background:"linear-gradient(135deg,var(--v),var(--c))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:900,color:"#fff"}}>{selUser.name?.charAt(0)||"?"}</div>
-                <div>
-                  <div style={{fontWeight:800,fontSize:17}}>{selUser.name||"—"}</div>
-                  <div style={{fontSize:12,color:"var(--t3)",marginTop:2}}>{selUser.email}</div>
-                  <div style={{display:"flex",gap:6,marginTop:6}}>
-                    <span className="badge" style={{background:selUser.plan==="pro"?"rgba(124,58,237,.15)":"rgba(255,255,255,.06)",color:selUser.plan==="pro"?"#C4B5FD":"var(--t3)"}}>{selUser.plan||"free"}</span>
-                    <span className="badge" style={{background:selUser.status==="active"?"rgba(16,185,129,.15)":"rgba(244,63,94,.15)",color:selUser.status==="active"?"#6EE7B7":"#FCA5A5"}}>{selUser.status||"active"}</span>
-                    {onlineUsers.includes(selUser._id)&&<span className="badge" style={{background:"rgba(16,185,129,.15)",color:"#6EE7B7"}}>● Online</span>}
+      {/* ─── User Detail Modal ─── */}
+      {selUser && (
+        <div
+          onClick={(e) => e.target === e.currentTarget && setSelUser(null)}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4 animate-fade-up"
+        >
+          <div className="bg-[#14141F] border border-white/[0.07] rounded-3xl p-6 sm:p-7 w-full max-w-lg max-h-[88vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-start mb-5">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar user={selUser} size={52} />
+                <div className="min-w-0">
+                  <div className="font-extrabold text-base sm:text-lg truncate">{selUser.name || "—"}</div>
+                  <div className="text-xs text-[#505075] mt-0.5 truncate">{selUser.email}</div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    <Badge tone={selUser.plan === "pro" ? "violet" : "neutral"}>{selUser.plan || "free"}</Badge>
+                    <Badge tone={selUser.status === "active" ? "emerald" : "rose"}>{selUser.status || "active"}</Badge>
+                    {onlineUsers.includes(selUser._id) && <Badge tone="emerald">● Online</Badge>}
                   </div>
                 </div>
               </div>
-              <button onClick={()=>setSelUser(null)} style={{background:"none",border:"none",color:"var(--t3)",cursor:"pointer",fontSize:20}}>✕</button>
+              <button onClick={() => setSelUser(null)} className="text-[#505075] hover:text-white shrink-0">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            {/* Suspicious flags */}
-            {isSuspicious(selUser).length>0&&(
-              <div style={{background:"rgba(244,63,94,.08)",border:"1px solid rgba(244,63,94,.2)",borderRadius:12,padding:"12px 14px",marginBottom:16}}>
-                <div style={{fontWeight:700,fontSize:12,color:"#F43F5E",marginBottom:6}}>🚨 Suspicious activity flags:</div>
-                {isSuspicious(selUser).map(f=><div key={f} style={{fontSize:12,color:"#FCA5A5",fontWeight:500,marginTop:3}}>• {f}</div>)}
+
+            {isSuspicious(selUser).length > 0 && (
+              <div className="bg-rose-500/[0.08] border border-rose-500/20 rounded-xl p-3.5 mb-4">
+                <div className="font-bold text-xs text-rose-500 mb-1.5 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Suspicious activity flags:
+                </div>
+                {isSuspicious(selUser).map((f) => (
+                  <div key={f} className="text-xs text-rose-300 font-medium mt-1">• {f}</div>
+                ))}
               </div>
             )}
-            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
-              {[["User ID",selUser._id],["Email",selUser.email],["Role",selUser.role||"user"],["Joined",fmtDate(selUser.createdAt)],["Tasks",selUser.taskCount||0],["Last login",fmtTime(selUser.lastLoginAt)]].map(([k,v])=>(
-                <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
-                  <span style={{fontSize:12,color:"var(--t3)",fontWeight:600}}>{k}</span>
-                  <span style={{fontSize:12,fontWeight:700,color:"var(--t1)",maxWidth:"60%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"right"}}>{String(v)}</span>
+
+            <div className="flex flex-col gap-1 mb-5">
+              {[
+                ["User ID", selUser._id],
+                ["Email", selUser.email],
+                ["Role", selUser.role || "user"],
+                ["Joined", fmtDate(selUser.createdAt)],
+                ["Tasks", selUser.taskCount || 0],
+                ["Last login", fmtTime(selUser.lastLoginAt)],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between py-2 border-b border-white/[0.05] gap-3">
+                  <span className="text-xs text-[#505075] font-semibold shrink-0">{k}</span>
+                  <span className="text-xs font-bold text-white truncate text-right">{String(v)}</span>
                 </div>
               ))}
             </div>
-            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-              {selUser.status!=="suspended"
-                ?<button onClick={()=>{suspendUser(selUser._id);setSelUser(p=>({...p,status:"suspended"}));}} style={{flex:1,padding:"10px",background:"rgba(244,63,94,.1)",border:"1px solid rgba(244,63,94,.2)",borderRadius:11,color:"#FCA5A5",fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Suspend</button>
-                :<button onClick={()=>{activateUser(selUser._id);setSelUser(p=>({...p,status:"active"}));}} style={{flex:1,padding:"10px",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.2)",borderRadius:11,color:"#6EE7B7",fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Activate</button>}
-              {selUser.plan!=="pro"&&<button onClick={()=>{upgradeUser(selUser._id);setSelUser(p=>({...p,plan:"pro"}));}} style={{flex:1,padding:"10px",background:"rgba(124,58,237,.12)",border:"1px solid rgba(124,58,237,.25)",borderRadius:11,color:"#C4B5FD",fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>↑ Upgrade to Pro</button>}
-              {isSuspicious(selUser).length>0&&<button onClick={()=>{autoBan(selUser);setSelUser(null);}} style={{flex:1,padding:"10px",background:"rgba(244,63,94,.15)",border:"1px solid rgba(244,63,94,.3)",borderRadius:11,color:"#F43F5E",fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>🚫 Auto-ban</button>}
-              <button onClick={()=>deleteUser(selUser._id,selUser.name)} style={{padding:"10px 16px",background:"rgba(244,63,94,.08)",border:"1px solid rgba(244,63,94,.15)",borderRadius:11,color:"#F87171",fontFamily:"Montserrat,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>🗑 Delete</button>
+
+            <div className="flex flex-wrap gap-2">
+              {selUser.status !== "suspended" ? (
+                <button
+                  onClick={() => { suspendUser(selUser._id); setSelUser((p) => ({ ...p, status: "suspended" })); }}
+                  className="flex-1 min-w-[100px] px-3 py-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 font-bold text-[13px] hover:bg-rose-500/20 transition"
+                >
+                  Suspend
+                </button>
+              ) : (
+                <button
+                  onClick={() => { activateUser(selUser._id); setSelUser((p) => ({ ...p, status: "active" })); }}
+                  className="flex-1 min-w-[100px] px-3 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-300 font-bold text-[13px] hover:bg-emerald-500/20 transition"
+                >
+                  Activate
+                </button>
+              )}
+              {selUser.plan !== "pro" && (
+                <button
+                  onClick={() => { upgradeUser(selUser._id); setSelUser((p) => ({ ...p, plan: "pro" })); }}
+                  className="flex-1 min-w-[100px] inline-flex items-center justify-center gap-1 px-3 py-2.5 bg-violet-500/12 border border-violet-500/25 rounded-xl text-violet-300 font-bold text-[13px] hover:bg-violet-500/20 transition"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" /> Pro
+                </button>
+              )}
+              {isSuspicious(selUser).length > 0 && (
+                <button
+                  onClick={() => { autoBan(selUser); setSelUser(null); }}
+                  className="flex-1 min-w-[100px] inline-flex items-center justify-center gap-1 px-3 py-2.5 bg-rose-500/15 border border-rose-500/30 rounded-xl text-rose-500 font-bold text-[13px] hover:bg-rose-500/25 transition"
+                >
+                  <Ban className="w-3.5 h-3.5" /> Auto-ban
+                </button>
+              )}
+              <button
+                onClick={() => deleteUser(selUser._id, selUser.name)}
+                className="inline-flex items-center justify-center gap-1 px-4 py-2.5 bg-rose-500/[0.08] border border-rose-500/15 rounded-xl text-rose-400 font-bold text-[13px] hover:bg-rose-500/15 transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>
