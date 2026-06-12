@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/BottomNav";
 import Footer from "./components/Footer";
+import BottomNav from "./components/BottomNav";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -26,25 +27,26 @@ import AdminUsers from "./pages/admin/pages/Users";
 import AdminAlerts from "./pages/admin/pages/Alerts";
 import AdminAnalytics from "./pages/admin/pages/Analytics";
 
-/**
- * Layout wrapper to control where Navbar/Footer appear
- */
 function Layout({ children }) {
   const location = useLocation();
-
-  // Hide Navbar/Footer on auth pages (clean UI for login/register)
-  const hideLayout =
-    location.pathname === "/" || location.pathname === "/register";
+  const hideLayout = ["/", "/login", "/register"].includes(location.pathname);
 
   return (
     <>
       {!hideLayout && <Navbar />}
 
-      <div className={hideLayout ? "" : "pt-20 min-h-screen bg-gray-50"}>
+      <div
+        className={
+          hideLayout
+            ? ""
+            : "pt-20 pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0 min-h-screen bg-gray-50"
+        }
+      >
         {children}
       </div>
 
       {!hideLayout && <Footer />}
+      {!hideLayout && <BottomNav />}
     </>
   );
 }
@@ -57,29 +59,27 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
-          {/* Add protected routes later */}
-          {<Route path="/admin" element={<AdminDashboard />} /> }
-          {<Route path="/admin/users"      element={<AdminUsers/>} />}
-          {<Route path="/admin/analytics"  element={<AdminAnalytics/>} />}
-          {<Route path="/admin/alerts"     element={<AdminAlerts/>} />}
-          {<Route path="/dashboard" element={<Dashboard />} /> }
-          {<Route path="/finance" element={<Finance />} /> }
-          {<Route path="/tasks" element={<Tasks />} /> }
-          {<Route path="/habits" element={<Habits />} /> }
-          {<Route path="/reports" element={<Reports />} /> }
-          {<Route path="/privacy" element={<Privacy />} /> }
-          {<Route path="/terms" element={<Terms />} /> }
-          {<Route path="/api" element={<ApiDocs />} /> }
-          {<Route path="/about" element={<About />} /> }
-          {<Route path="/contact" element={<Contact />} /> }
-          {<Route path="/support" element={<Support />} /> }
-          {<Route path="/careers" element={<Careers />} /> }
-          {<Route path="/press" element={<Press />} /> }
-          {<Route path="/settings" element={<Settings />} /> }
-          {<Route path="/profile" element={<MyProfile />} /> }
-          {<Route path="/activity" element={<ActivityLog />} /> }
-          {<Route path="/notifications" element={<Notifications />} /> }
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/alerts" element={<AdminAlerts />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/finance" element={<Finance />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/habits" element={<Habits />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/api" element={<ApiDocs />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/press" element={<Press />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<MyProfile />} />
+          <Route path="/activity" element={<ActivityLog />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Routes>
       </Layout>
     </BrowserRouter>

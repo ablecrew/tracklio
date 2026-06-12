@@ -21,43 +21,58 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-// Trust proxy (important for platforms like Railway, Render, Heroku)
+// Trust proxy (important for Render, Railway, Heroku)
 app.set("trust proxy", 1);
 
-// CORS Setup — supports multiple origins
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
+/* ----------------------------- CORS Setup ----------------------------- */
+// CLIENT_URL can be a single URL or comma-separated list:
+//   CLIENT_URL=https://myapp.onrender.com
+//   CLIENT_URL=https://myapp.onrender.com,https://staging.myapp.com
+const envOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
+
+// Always allow common local dev ports
+const devOrigins = [
   "http://localhost:5173",
   "http://localhost:5178",
   "http://localhost:3000",
-].filter(Boolean);
+];
+
+const allowedOrigins = [...new Set([...envOrigins, ...devOrigins])];
+
+console.log("✅ Allowed CORS origins:", allowedOrigins);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, curl)
+      // Allow tools without origin (Postman, curl, server-to-server)
       if (!origin) return callback(null, true);
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true); // Set to `callback(new Error("Not allowed by CORS"))` for strict mode
+
+      console.warn(`⛔ Blocked by CORS: ${origin}`);
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   })
 );
 
-// Body parsers
+/* --------------------------- Body Parsers --------------------------- */
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Request logger (lightweight)
+/* --------------------------- Request Logger -------------------------- */
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} → ${req.method} ${req.url}`);
   next();
 });
 
-//  Root route
+/* ------------------------------ Routes ------------------------------ */
 app.get("/", (req, res) => {
   res.status(200).json({
     status: "ok",
@@ -67,7 +82,6 @@ app.get("/", (req, res) => {
   });
 });
 
-//  API base route
 app.get("/api", (req, res) => {
   res.status(200).json({
     status: "ok",
@@ -76,7 +90,6 @@ app.get("/api", (req, res) => {
   });
 });
 
-//  Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "healthy",
@@ -86,7 +99,6 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-//  API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/transactions", transactionRoutes);
@@ -97,7 +109,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 
-//  404 handler
+/* --------------------------- 404 Handler --------------------------- */
 app.use((req, res) => {
   res.status(404).json({
     status: "error",
@@ -105,7 +117,7 @@ app.use((req, res) => {
   });
 });
 
-//  Global error handler
+/* ------------------------ Global Error Handler ----------------------- */
 app.use((err, req, res, next) => {
   console.error("❌ Server Error:", err.stack || err.message);
   res.status(err.status || 500).json({
@@ -114,7 +126,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-//  MongoDB Connection + Server Start
+/* ----------------------- Start Server + MongoDB ---------------------- */
 const PORT = process.env.PORT || 8080;
 
 const startServer = async () => {
@@ -138,7 +150,7 @@ const startServer = async () => {
 
 startServer();
 
-//  Graceful shutdown
+/* --------------------------- Graceful Shutdown ----------------------- */
 process.on("SIGTERM", async () => {
   console.log("⚠️ SIGTERM received, shutting down gracefully...");
   await mongoose.connection.close();
@@ -151,7 +163,6 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-// 🪤 Catch unhandled errors
 process.on("unhandledRejection", (reason) => {
   console.error("❌ Unhandled Rejection:", reason);
 });
