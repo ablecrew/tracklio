@@ -196,275 +196,277 @@ export default function Habits() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 relative overflow-hidden font-montserrat">
+    <div className="min-h-screen h-screen bg-gray-950 text-gray-100 relative overflow-hidden font-montserrat">
       {/* Background Orbs */}
       <div className="fixed w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[90px] -top-40 -left-32 pointer-events-none z-0" />
       <div className="fixed w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[90px] -bottom-28 -right-36 pointer-events-none z-0" />
       <div className="fixed w-[350px] h-[350px] bg-amber-500/6 rounded-full blur-[90px] bottom-[20%] left-[35%] pointer-events-none z-0" />
 
-      <div className="relative z-10 px-4 sm:px-6 md:px-8 py-8 max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 animate-fade-in">
-          <div>
-            <div className="flex items-center gap-3 mb-1.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-violet-600 flex items-center justify-center">
-                <Target className="w-5 h-5 text-white" />
+      <div className="relative z-10 w-full h-full overflow-y-auto">
+        <div className="px-4 sm:px-6 md:px-8 py-6 max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 animate-fade-in">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-violet-600 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-2xl font-black tracking-tight">Habit Tracker</h1>
               </div>
-              <h1 className="text-2xl font-black tracking-tight">Habit Tracker</h1>
+              <p className="text-sm text-gray-500 font-medium">
+                {habits.length} habits · {todayDone}/{habits.length} done today · {overallRate}% consistency
+              </p>
             </div>
-            <p className="text-sm text-gray-500 font-medium">
-              {habits.length} habits · {todayDone}/{habits.length} done today · {overallRate}% consistency
-            </p>
+            <button className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-emerald-500 border-0 rounded-xl text-white font-bold text-xs hover:opacity-90 hover:scale-[1.02] transition-all flex items-center gap-2" onClick={() => { setEditH(null); setForm(EMPTY_FORM); setShowForm(true); }}>
+              <Plus className="w-4 h-4" />
+              New Habit
+            </button>
           </div>
-          <button className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-emerald-500 border-0 rounded-xl text-white font-bold text-xs hover:opacity-90 hover:scale-[1.02] transition-all flex items-center gap-2" onClick={() => { setEditH(null); setForm(EMPTY_FORM); setShowForm(true); }}>
-            <Plus className="w-4 h-4" />
-            New Habit
-          </button>
-        </div>
 
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl px-5 py-3 mb-6 text-rose-300 text-sm font-semibold flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl px-5 py-3 mb-5 text-rose-300 text-sm font-semibold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              {error}
+            </div>
+          )}
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[
-            { icon: <Target className="w-5 h-5" />, label: "Total Habits", value: habits.length, color: "#8B5CF6", sub: "Tracked" },
-            { icon: <Check className="w-5 h-5" />, label: "Done Today", value: `${todayDone}/${habits.length}`, color: "#10B981", sub: "Check-ins" },
-            { icon: <Flame className="w-5 h-5" />, label: "Best Streak", value: `${topStreak}d`, color: "#F59E0B", sub: "Consecutive days" },
-            { icon: <TrendingUp className="w-5 h-5" />, label: "30-Day Rate", value: `${overallRate}%`, color: "#06B6D4", sub: "Overall consistency" },
-          ].map((c, i) => (
-            <div key={c.label} className="bg-gray-900 border border-white/5 rounded-2xl p-5 hover:border-white/10 hover:-translate-y-0.5 transition-all animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="flex items-center justify-between mb-3">
-                <div style={{ color: c.color }}>{c.icon}</div>
-                <div className="w-2 h-2 rounded-full animate-pulse-dot" style={{ background: c.color }} />
+          {/* Stat cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+            {[
+              { icon: <Target className="w-5 h-5" />, label: "Total Habits", value: habits.length, color: "#8B5CF6", sub: "Tracked" },
+              { icon: <Check className="w-5 h-5" />, label: "Done Today", value: `${todayDone}/${habits.length}`, color: "#10B981", sub: "Check-ins" },
+              { icon: <Flame className="w-5 h-5" />, label: "Best Streak", value: `${topStreak}d`, color: "#F59E0B", sub: "Consecutive days" },
+              { icon: <TrendingUp className="w-5 h-5" />, label: "30-Day Rate", value: `${overallRate}%`, color: "#06B6D4", sub: "Overall consistency" },
+            ].map((c, i) => (
+              <div key={c.label} className="bg-gray-900 border border-white/5 rounded-2xl p-5 hover:border-white/10 hover:-translate-y-0.5 transition-all animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div style={{ color: c.color }}>{c.icon}</div>
+                  <div className="w-2 h-2 rounded-full animate-pulse-dot" style={{ background: c.color }} />
+                </div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{c.label}</p>
+                <p className="text-2xl font-black tracking-tight mt-1" style={{ color: c.color }}>{c.value}</p>
+                <p className="text-xs font-medium text-gray-500 mt-1">{c.sub}</p>
               </div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{c.label}</p>
-              <p className="text-2xl font-black tracking-tight mt-1" style={{ color: c.color }}>{c.value}</p>
-              <p className="text-xs font-medium text-gray-500 mt-1">{c.sub}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-          <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 animate-fade-in" style={{ animationDelay: "260ms" }}>
-            <div className="flex items-center gap-2 font-bold text-sm mb-4">
-              <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-              7-Day Check-in Activity
-            </div>
-            <div className="h-44">
-              <ResponsiveContainer>
-                <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                  <XAxis dataKey="day" tick={{ fill: "#505075", fontSize: 11, fontFamily: "Montserrat", fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#505075", fontSize: 11, fontFamily: "Montserrat", fontWeight: 600 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="done" name="Check-ins" radius={[6, 6, 0, 0]} fill="url(#habGrad)" />
-                  <defs>
-                    <linearGradient id="habGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#7C3AED" />
-                      <stop offset="100%" stopColor="#06B6D4" />
-                    </linearGradient>
-                  </defs>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            ))}
           </div>
 
-          <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 animate-fade-in" style={{ animationDelay: "300ms" }}>
-            <div className="flex items-center gap-2 font-bold text-sm mb-4">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              Consistency Radar
-            </div>
-            {radarData.length < 3 ? (
-              <div className="h-44 flex items-center justify-center text-sm text-gray-500">Add 3+ habits to see radar</div>
-            ) : (
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+            <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 animate-fade-in" style={{ animationDelay: "260ms" }}>
+              <div className="flex items-center gap-2 font-bold text-sm mb-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                7-Day Check-in Activity
+              </div>
               <div className="h-44">
                 <ResponsiveContainer>
-                  <RadarChart data={radarData} cx="50%" cy="50%" outerRadius={65}>
-                    <PolarGrid stroke="rgba(255,255,255,0.07)" />
-                    <PolarAngleAxis dataKey="habit" tick={{ fill: "#505075", fontSize: 9, fontFamily: "Montserrat", fontWeight: 600 }} />
-                    <Radar name="Rate %" dataKey="rate" stroke="#7C3AED" fill="#7C3AED" fillOpacity={0.25} strokeWidth={2} />
+                  <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                    <XAxis dataKey="day" tick={{ fill: "#505075", fontSize: 11, fontFamily: "Montserrat", fontWeight: 600 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#505075", fontSize: 11, fontFamily: "Montserrat", fontWeight: 600 }} axisLine={false} tickLine={false} allowDecimals={false} />
                     <Tooltip content={<CustomTooltip />} />
-                  </RadarChart>
+                    <Bar dataKey="done" name="Check-ins" radius={[6, 6, 0, 0]} fill="url(#habGrad)" />
+                    <defs>
+                      <linearGradient id="habGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#7C3AED" />
+                        <stop offset="100%" stopColor="#06B6D4" />
+                      </linearGradient>
+                    </defs>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Today's check-in grid */}
-        {habits.length > 0 && (
-          <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 mb-6 animate-fade-in" style={{ animationDelay: "320ms" }}>
-            <div className="flex items-center gap-2 font-bold text-sm mb-4">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse-dot" />
-              Today's Check-ins
-              <span className="bg-emerald-600/20 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full ml-1">
-                {todayDone}/{habits.length} done
-              </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {habits.map(h => {
-                const done = (logs[h._id] || []).some(l => l.date?.split("T")[0] === today);
+
+            <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 animate-fade-in" style={{ animationDelay: "300ms" }}>
+              <div className="flex items-center gap-2 font-bold text-sm mb-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Consistency Radar
+              </div>
+              {radarData.length < 3 ? (
+                <div className="h-44 flex items-center justify-center text-sm text-gray-500">Add 3+ habits to see radar</div>
+              ) : (
+                <div className="h-44">
+                  <ResponsiveContainer>
+                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius={65}>
+                      <PolarGrid stroke="rgba(255,255,255,0.07)" />
+                      <PolarAngleAxis dataKey="habit" tick={{ fill: "#505075", fontSize: 9, fontFamily: "Montserrat", fontWeight: 600 }} />
+                      <Radar name="Rate %" dataKey="rate" stroke="#7C3AED" fill="#7C3AED" fillOpacity={0.25} strokeWidth={2} />
+                      <Tooltip content={<CustomTooltip />} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Today's check-in grid */}
+          {habits.length > 0 && (
+            <div className="bg-gray-900 border border-white/5 rounded-2xl p-5 mb-5 animate-fade-in" style={{ animationDelay: "320ms" }}>
+              <div className="flex items-center gap-2 font-bold text-sm mb-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse-dot" />
+                Today's Check-ins
+                <span className="bg-emerald-600/20 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full ml-1">
+                  {todayDone}/{habits.length} done
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {habits.map(h => {
+                  const done = (logs[h._id] || []).some(l => l.date?.split("T")[0] === today);
+                  return (
+                    <div
+                      key={h._id}
+                      onClick={() => logToday(h)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all"
+                      style={{
+                        background: done ? "rgba(16,185,129,0.08)" : "#1A1A28",
+                        border: `1px solid ${done ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.07)"}`,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = done ? "rgba(16,185,129,0.5)" : h.color + "55"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = done ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.07)"; }}
+                    >
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0" style={{ background: h.color + "22" }}>
+                        {h.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate" style={{ color: done ? "#10B981" : "#F0F0FF" }}>{h.name}</p>
+                        <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{calcStreak(h._id)}d streak</p>
+                      </div>
+                      <div
+                        className="w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                        style={{
+                          borderColor: done ? "#10B981" : h.color,
+                          background: done ? "#10B981" : "transparent",
+                        }}
+                      >
+                        {done && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Habit cards with 28-day heatmap */}
+          {loading ? <Spinner /> : habits.length === 0 ? (
+            <div className="bg-gray-900 border border-white/5 rounded-2xl text-center py-12 px-6 animate-fade-in">
+              <Target className="w-12 h-12 mx-auto mb-3 text-gray-500" />
+              <h3 className="font-extrabold text-lg mb-2">No habits yet</h3>
+              <p className="text-sm text-gray-500 mb-5">Start building powerful habits that stick.</p>
+              <button className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-emerald-500 border-0 rounded-xl text-white font-bold text-xs hover:opacity-90 hover:scale-[1.02] transition-all" onClick={() => { setEditH(null); setForm(EMPTY_FORM); setShowForm(true); }}>
+                <Plus className="w-4 h-4 inline mr-1" />
+                Create Your First Habit
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-6">
+              {habits.map((h, i) => {
+                const streak = calcStreak(h._id);
+                const rate = completionRate(h._id);
+                const hLogs = logs[h._id] || [];
+                const doneToday = hLogs.some(l => l.date?.split("T")[0] === today);
                 return (
                   <div
                     key={h._id}
-                    onClick={() => logToday(h)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all"
-                    style={{
-                      background: done ? "rgba(16,185,129,0.08)" : "#1A1A28",
-                      border: `1px solid ${done ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.07)"}`,
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = done ? "rgba(16,185,129,0.5)" : h.color + "55"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = done ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.07)"; }}
+                    className="bg-gray-900 border border-white/5 rounded-2xl p-5 hover:border-white/10 hover:-translate-y-0.5 transition-all animate-fade-in"
+                    style={{ animationDelay: `${i * 50}ms`, borderTop: `3px solid ${h.color}` }}
                   >
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0" style={{ background: h.color + "22" }}>
-                      {h.icon}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: h.color + "22" }}>
+                          {h.icon}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-gray-100">{h.name}</p>
+                          <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{h.frequency || "daily"} · {h.target || 1}× {h.unit || "times"}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => setViewH(h)}
+                          title="Details"
+                          className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 transition-all flex items-center justify-center"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => { setEditH(h); setForm({ name: h.name, icon: h.icon, color: h.color, frequency: h.frequency || "daily", target: h.target || 1, unit: h.unit || "times", note: h.note || "" }); setShowForm(true); }}
+                          title="Edit"
+                          className="w-7 h-7 rounded-lg bg-violet-600/12 border border-violet-600/25 text-violet-300 hover:bg-violet-600/28 transition-all flex items-center justify-center"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDelH(h)}
+                          title="Delete"
+                          className="w-7 h-7 rounded-lg bg-rose-600/10 border border-rose-600/20 text-rose-300 hover:bg-rose-600/25 transition-all flex items-center justify-center"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate" style={{ color: done ? "#10B981" : "#F0F0FF" }}>{h.name}</p>
-                      <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{calcStreak(h._id)}d streak</p>
+
+                    <div className="flex gap-4 mb-3">
+                      <div className="text-center">
+                        <div className="text-lg font-black flex items-center gap-1" style={{ color: h.color }}>
+                          <Flame className="w-4 h-4" />
+                          {streak}
+                        </div>
+                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Streak</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-black text-cyan-400">{rate}%</p>
+                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">30-Day</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-black text-gray-100">{hLogs.length}</p>
+                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Total</p>
+                      </div>
+                      <div className="flex-1 flex flex-col justify-center gap-1">
+                        <p className="text-[10px] text-gray-500 font-semibold">Consistency</p>
+                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${rate}%`, background: h.color }} />
+                        </div>
+                      </div>
                     </div>
-                    <div
-                      className="w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
+
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">28-Day Activity</p>
+                    <StreakGrid logs={hLogs} color={h.color} />
+
+                    <button
+                      onClick={() => logToday(h)}
+                      className="w-full mt-3.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all"
                       style={{
-                        borderColor: done ? "#10B981" : h.color,
-                        background: done ? "#10B981" : "transparent",
+                        background: doneToday ? "rgba(16,185,129,0.12)" : `linear-gradient(135deg, ${h.color}, ${h.color}99)`,
+                        border: doneToday ? "1px solid rgba(16,185,129,0.3)" : "none",
+                        color: doneToday ? "#6EE7B7" : "#fff",
                       }}
                     >
-                      {done && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-                    </div>
+                      {doneToday ? (
+                        <span className="flex items-center justify-center gap-1">
+                          <Check className="w-4 h-4" />
+                          Done today · Tap to undo
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-1">
+                          <Check className="w-4 h-4" />
+                          Mark done for today
+                        </span>
+                      )}
+                    </button>
                   </div>
                 );
               })}
             </div>
-          </div>
-        )}
-
-        {/* Habit cards with 28-day heatmap */}
-        {loading ? <Spinner /> : habits.length === 0 ? (
-          <div className="bg-gray-900 border border-white/5 rounded-2xl text-center py-12 px-6 animate-fade-in">
-            <Target className="w-12 h-12 mx-auto mb-3 text-gray-500" />
-            <h3 className="font-extrabold text-lg mb-2">No habits yet</h3>
-            <p className="text-sm text-gray-500 mb-5">Start building powerful habits that stick.</p>
-            <button className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-emerald-500 border-0 rounded-xl text-white font-bold text-xs hover:opacity-90 hover:scale-[1.02] transition-all" onClick={() => { setEditH(null); setForm(EMPTY_FORM); setShowForm(true); }}>
-              <Plus className="w-4 h-4 inline mr-1" />
-              Create Your First Habit
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {habits.map((h, i) => {
-              const streak = calcStreak(h._id);
-              const rate = completionRate(h._id);
-              const hLogs = logs[h._id] || [];
-              const doneToday = hLogs.some(l => l.date?.split("T")[0] === today);
-              return (
-                <div
-                  key={h._id}
-                  className="bg-gray-900 border border-white/5 rounded-2xl p-5 hover:border-white/10 hover:-translate-y-0.5 transition-all animate-fade-in"
-                  style={{ animationDelay: `${i * 50}ms`, borderTop: `3px solid ${h.color}` }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: h.color + "22" }}>
-                        {h.icon}
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm text-gray-100">{h.name}</p>
-                        <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{h.frequency || "daily"} · {h.target || 1}× {h.unit || "times"}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-1.5">
-                      <button
-                        onClick={() => setViewH(h)}
-                        title="Details"
-                        className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/25 transition-all flex items-center justify-center"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => { setEditH(h); setForm({ name: h.name, icon: h.icon, color: h.color, frequency: h.frequency || "daily", target: h.target || 1, unit: h.unit || "times", note: h.note || "" }); setShowForm(true); }}
-                        title="Edit"
-                        className="w-7 h-7 rounded-lg bg-violet-600/12 border border-violet-600/25 text-violet-300 hover:bg-violet-600/28 transition-all flex items-center justify-center"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDelH(h)}
-                        title="Delete"
-                        className="w-7 h-7 rounded-lg bg-rose-600/10 border border-rose-600/20 text-rose-300 hover:bg-rose-600/25 transition-all flex items-center justify-center"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 mb-3">
-                    <div className="text-center">
-                      <div className="text-lg font-black flex items-center gap-1" style={{ color: h.color }}>
-                        <Flame className="w-4 h-4" />
-                        {streak}
-                      </div>
-                      <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Streak</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-black text-cyan-400">{rate}%</p>
-                      <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">30-Day</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-black text-gray-100">{hLogs.length}</p>
-                      <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Total</p>
-                    </div>
-                    <div className="flex-1 flex flex-col justify-center gap-1">
-                      <p className="text-[10px] text-gray-500 font-semibold">Consistency</p>
-                      <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${rate}%`, background: h.color }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">28-Day Activity</p>
-                  <StreakGrid logs={hLogs} color={h.color} />
-
-                  <button
-                    onClick={() => logToday(h)}
-                    className="w-full mt-3.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all"
-                    style={{
-                      background: doneToday ? "rgba(16,185,129,0.12)" : `linear-gradient(135deg, ${h.color}, ${h.color}99)`,
-                      border: doneToday ? "1px solid rgba(16,185,129,0.3)" : "none",
-                      color: doneToday ? "#6EE7B7" : "#fff",
-                    }}
-                  >
-                    {doneToday ? (
-                      <span className="flex items-center justify-center gap-1">
-                        <Check className="w-4 h-4" />
-                        Done today · Tap to undo
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-1">
-                        <Check className="w-4 h-4" />
-                        Mark done for today
-                      </span>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Create / Edit Modal - FIXED: Now scrollable and fits screen */}
+      {/* Create / Edit Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowForm(false)}>
           <div className="bg-gray-900 border border-white/5 rounded-2xl shadow-2xl w-[92%] max-w-md max-h-[90vh] flex flex-col">
-            {/* Header - Fixed */}
-            <div className="flex items-center justify-between px-7 pt-7 pb-4 border-b border-white/5">
+            {/* Header */}
+            <div className="flex items-center justify-between px-7 pt-6 pb-4 border-b border-white/5">
               <h3 className="font-extrabold text-lg flex items-center gap-2">
                 {editH ? <Edit2 className="w-5 h-5 text-violet-400" /> : <Plus className="w-5 h-5 text-emerald-400" />}
                 {editH ? "Edit Habit" : "New Habit"}
@@ -574,8 +576,8 @@ export default function Habits() {
               </div>
             </div>
 
-            {/* Footer - Fixed with buttons always visible */}
-            <div className="px-7 pb-7 pt-4 border-t border-white/5">
+            {/* Footer */}
+            <div className="px-7 pb-6 pt-4 border-t border-white/5">
               <div className="flex gap-3">
                 <button 
                   className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all" 
@@ -597,11 +599,11 @@ export default function Habits() {
         </div>
       )}
 
-      {/* View detail modal - also fixed for consistency */}
+      {/* View detail modal */}
       {viewH && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in" onClick={e => e.target === e.currentTarget && setViewH(null)}>
           <div className="bg-gray-900 border border-white/5 rounded-2xl shadow-2xl w-[92%] max-w-md max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-7 pt-7 pb-4 border-b border-white/5">
+            <div className="flex items-center justify-between px-7 pt-6 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2.5">
                 <span className="text-3xl">{viewH.icon}</span>
                 <h3 className="font-extrabold text-lg">{viewH.name}</h3>
@@ -632,7 +634,7 @@ export default function Habits() {
               </div>
             </div>
             
-            <div className="px-7 pb-7 pt-4 border-t border-white/5">
+            <div className="px-7 pb-6 pt-4 border-t border-white/5">
               <div className="flex gap-3">
                 <button 
                   className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-semibold text-xs hover:bg-white/10 hover:text-white transition-all" 
@@ -653,7 +655,7 @@ export default function Habits() {
         </div>
       )}
 
-      {/* Delete confirm modal - also fixed */}
+      {/* Delete confirm modal */}
       {delH && (
         <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fade-in" onClick={e => e.target === e.currentTarget && setDelH(null)}>
           <div className="bg-gray-900 border border-white/5 rounded-2xl p-7 w-[92%] max-w-sm shadow-2xl">
